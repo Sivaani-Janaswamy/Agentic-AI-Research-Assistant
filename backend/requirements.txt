@@ -7,3 +7,4 @@ requests
 cors
 faiss-cpu 
 sentence-transformers
+arxiv
