@@ -26,7 +26,7 @@ function App() {
     setGaps("");
     setAnswer("");
     try {
-      const res = await axios.post("${API}/research", { query });
+      const res = await axios.post(`${API}/research`, { query });
       setPapers(res.data.papers);
       setGaps(res.data.gaps);
     } catch (err) {
