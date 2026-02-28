@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+groq
+python-dotenv
+requests
+cors
+faiss-cpu 
+sentence-transformers

@@ -1,0 +1,46 @@
+# =========================
+# Node / React (Frontend)
+# =========================
+node_modules/
+frontend/node_modules/
+frontend/build/
+*.log
+
+# Optional: local environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =========================
+# Python (Backend)
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+backend/__pycache__/
+backend/*.pyc
+backend/env/
+backend/.env
+
+# VSCode
+.vscode/
+
+# Mac / Windows
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Optional: IDE / Python environment folders
+*.egg-info/
+dist/
+build/
+
+.venv/
+.venv/
+venv/
+backend/venv/
