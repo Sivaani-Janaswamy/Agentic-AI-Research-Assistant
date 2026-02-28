@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Typography, Button, Box } from "@mui/material";
 import Dashboard from "./components/Dashboard";
 import ShaderBackground from "./components/ShaderBackground";
+const API = import.meta.env.VITE_API_URL;
 
 function App() {
   const [view, setView] = useState("landing");
@@ -25,7 +26,7 @@ function App() {
     setGaps("");
     setAnswer("");
     try {
-      const res = await axios.post("http://localhost:8000/research", { query });
+      const res = await axios.post("${API}/research", { query });
       setPapers(res.data.papers);
       setGaps(res.data.gaps);
     } catch (err) {
@@ -37,7 +38,7 @@ function App() {
   const askQuestion = async () => {
     if (!question) return;
     try {
-      const res = await axios.post("http://localhost:8000/ask", { question });
+      const res = await axios.post(`${API}/ask`, { question });
       setAnswer(res.data.answer);
     } catch (err) {
       console.error(err);
