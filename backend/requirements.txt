@@ -4,7 +4,6 @@ pydantic
 groq
 python-dotenv
 requests
-cors
-faiss-cpu 
+faiss-cpu
 sentence-transformers
 arxiv
