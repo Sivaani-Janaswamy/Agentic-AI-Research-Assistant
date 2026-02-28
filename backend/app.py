@@ -14,7 +14,7 @@ app = FastAPI()
 # ===== CORS CONFIG =====
 origins = [
     "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    "https://agentic-ai-research-assistant-two.vercel.app/",
 ]
 
 app.add_middleware(
