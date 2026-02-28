@@ -28,7 +28,8 @@ function Dashboard({
   runResearch,
   askQuestion,
 }) {
-  const [history, setHistory] = useState([]);
+    const [history, setHistory] = useState([]);
+    const [collapsed, setCollapsed] = useState(false);
 
   // Add search to history
   const addToHistory = (q) => {
@@ -56,72 +57,97 @@ ${paper.extracted ? `Dataset / Code Info:\n${paper.extracted}` : ""}
       {/* ================= SIDEBAR ================= */}
       <Box
         sx={{
-          width: 300,
-          p: 5,
+          width: collapsed ? 80 : 300,
+          transition: "width 0.3s ease",
+          p: collapsed ? 2 : 5,
           borderRight: "1px solid #222",
-          display: "flex",
+          display: { xs: "none", md: "flex" }, // 🔥 hide on phone
           flexDirection: "column",
           justifyContent: "space-between",
+          overflow: "hidden",
         }}
       >
         {/* Sidebar Header */}
         <Box>
-          <Box display="flex" alignItems="center" gap={1.5} mb={1}>
-            <img
-              src={IconImage}
-              alt="icon"
-              style={{ width: "30px", height: "30px" }}
-            />
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-              sx={{ color: "#fff", fontSize: "1.6rem" }}
-            >
-              AI Researcher
-            </Typography>
-          </Box>
-          <Typography variant="body2" color="#aaa" mb={4}>
-            Multi-Agent Research Assistant
-          </Typography>
-          <Divider sx={{ borderColor: "#222", mb: 4 }} />
-
-          {/* ================= SEARCH HISTORY ================= */}
-          <Typography variant="subtitle2" sx={{ color: "#a4c639", mb: 1 }}>
-            Session History
-          </Typography>
-          <Box sx={{ maxHeight: 300, overflowY: "auto" }}>
-            {history.length === 0 && (
-              <Typography variant="body2" color="#888">
-                No history yet
-              </Typography>
-            )}
-            {history.map((item, idx) => (
-              <Card
-                key={idx}
-                sx={{
-                  bgcolor: "#111",
-                  borderRadius: "12px",
-                  p: 1,
-                  mb: 1,
-                  cursor: "pointer",
-                  "&:hover": { backgroundColor: "#1a1a1a" },
-                }}
-                onClick={() => {
-                  setQuery(item);
-                  runResearch();
-                }}
-              >
-                <Typography variant="body2" sx={{ color: "#ccc" }}>
-                  {item}
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+            <Box display="flex" alignItems="center" gap={1.5}>
+              <img
+                src={IconImage}
+                alt="icon"
+                style={{ width: "30px", height: "30px" }}
+              />
+              {!collapsed && (
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  sx={{ color: "#fff", fontSize: "1.6rem" }}
+                >
+                  AI Researcher
                 </Typography>
-              </Card>
-            ))}
+              )}
+            </Box>
+
+            {/* Collapse Button */}
+            <Button
+              onClick={() => setCollapsed(!collapsed)}
+              sx={{
+                minWidth: "auto",
+                color: "#a4c639",
+                fontSize: "0.8rem",
+              }}
+            >
+              {collapsed ? ">" : "<"}
+            </Button>
           </Box>
+
+          {!collapsed && (
+            <>
+              <Typography variant="body2" color="#aaa" mb={4}>
+                Multi-Agent Research Assistant
+              </Typography>
+              <Divider sx={{ borderColor: "#222", mb: 4 }} />
+
+              {/* ================= SEARCH HISTORY ================= */}
+              <Typography variant="subtitle2" sx={{ color: "#a4c639", mb: 1 }}>
+                Session History
+              </Typography>
+              <Box sx={{ maxHeight: 300, overflowY: "auto" }}>
+                {history.length === 0 && (
+                  <Typography variant="body2" color="#888">
+                    No history yet
+                  </Typography>
+                )}
+                {history.map((item, idx) => (
+                  <Card
+                    key={idx}
+                    sx={{
+                      bgcolor: "#111",
+                      borderRadius: "12px",
+                      p: 1,
+                      mb: 1,
+                      cursor: "pointer",
+                      "&:hover": { backgroundColor: "#1a1a1a" },
+                    }}
+                    onClick={() => {
+                      setQuery(item);
+                      runResearch();
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ color: "#ccc" }}>
+                      {item}
+                    </Typography>
+                  </Card>
+                ))}
+              </Box>
+            </>
+          )}
         </Box>
 
-        <Typography variant="caption" color="#888">
-          © 2026 Sivaani Janaswamy
-        </Typography>
+        {!collapsed && (
+          <Typography variant="caption" color="#888">
+            © 2026 Sivaani Janaswamy
+          </Typography>
+        )}
       </Box>
 
       {/* ================= MAIN CONTENT ================= */}
