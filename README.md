@@ -49,16 +49,15 @@
 python -m venv venv
 .\venv\Scripts\activate
 ```
-#Install dependencies:
+###Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
-#Run the backend server:
+###Run the backend server:
 ```bash
 uvicorn app:app --reload
 ```
-#Frontend
-```bash
+###Frontend
 Navigate to the frontend directory:
 ```bash
 cd ai-research-ui
