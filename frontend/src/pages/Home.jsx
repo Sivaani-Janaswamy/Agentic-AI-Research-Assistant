@@ -11,7 +11,7 @@ function Home() {
       {/* Navbar */}
       <Navbar />
 
-      <Box sx={{ display: "flex", flex: 1, mt: "72px" }}>
+      <Box sx={{ display: "flex", flex: 1, mt: { xs: "64px", lg: "72px" } }}>
         {/* History Sidebar */}
         <Sidebar />
 
@@ -20,7 +20,7 @@ function Home() {
           component="main"
           sx={{
             flexGrow: 1,
-            p: { xs: 2, md: 4, lg: 6 },
+            p: { xs: 2, sm: 3, md: 4, lg: 6 },
             ml: { lg: "280px", xs: 0 },
             background: "#F8FAFF",
             minHeight: "calc(100vh - 72px)"
@@ -28,17 +28,17 @@ function Home() {
         >
           <Container maxWidth="md">
             {/* Search Bar */}
-            <Box sx={{ mb: 6 }}>
+            <Box sx={{ mb: { xs: 4, sm: 6 } }}>
               <Searchbar />
             </Box>
 
             {/* Section Heading */}
-            <Typography variant="h5" sx={{ mb: 3, fontWeight: 700 }}>
+            <Typography variant="h5" sx={{ mb: 3, fontWeight: 700, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}>
               Recent Research Papers
             </Typography>
 
             {/* Paper Cards (Vertical Stack) */}
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 2, sm: 3 } }}>
               <PaperCard />
               <PaperCard />
               <PaperCard />

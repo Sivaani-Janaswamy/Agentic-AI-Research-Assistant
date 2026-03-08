@@ -27,25 +27,25 @@ const RelatedPapers = () => {
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Navbar />
-      <Box sx={{ display: "flex", flex: 1, mt: "72px" }}>
+      <Box sx={{ display: "flex", flex: 1, mt: { xs: "64px", lg: "72px" } }}>
         <Sidebar />
         <Box
           component="main"
           sx={{
             flexGrow: 1,
-            p: { xs: 2, md: 4, lg: 6 },
+            p: { xs: 2, sm: 3, md: 4, lg: 6 },
             ml: { lg: "280px", xs: 0 },
             background: "#F8FAFF",
             minHeight: "calc(100vh - 72px)"
           }}
         >
           <Container maxWidth="md">
-            <Typography variant="h4" sx={{ mb: 4, fontWeight: 700 }}>
+            <Typography variant="h4" sx={{ mb: 4, fontWeight: 700, fontSize: { xs: "1.75rem", sm: "2.125rem" } }}>
               Related Papers Suggestions
             </Typography>
 
-            <Card sx={{ p: 4, mb: 6 }}>
-              <Typography variant="h6" sx={{ mb: 2 }}>Search by Topic or Paper Title</Typography>
+            <Card sx={{ p: { xs: 3, sm: 4 }, mb: 6 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>Search by Topic or Paper Title</Typography>
               <TextField
                 fullWidth
                 placeholder="Enter a research area (e.g., 'Quantum Computing')"
@@ -73,7 +73,7 @@ const RelatedPapers = () => {
                   bgcolor: "#101828", 
                   color: "#fff",
                   px: 4,
-                  py: 1,
+                  py: 1.5,
                   "&:hover": { bgcolor: "#1D2939" }
                 }}
                 disabled={!topic || loading}
@@ -85,7 +85,7 @@ const RelatedPapers = () => {
 
             {papers.length > 0 && (
               <Box>
-                <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>Recommended Papers</Typography>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>Recommended Papers</Typography>
                 <Card sx={{ p: 0 }}>
                   <List sx={{ p: 0 }}>
                     {papers.map((paper, index) => (
@@ -93,7 +93,7 @@ const RelatedPapers = () => {
                         <ListItem
                           sx={{
                             py: 2,
-                            px: 3,
+                            px: { xs: 2, sm: 3 },
                             "&:hover": { bgcolor: "#F9FAFB" },
                             cursor: "pointer"
                           }}
@@ -102,7 +102,8 @@ const RelatedPapers = () => {
                             primary={paper} 
                             primaryTypographyProps={{ 
                               fontWeight: 500,
-                              color: "#101828"
+                              color: "#101828",
+                              variant: "body1"
                             }}
                             secondary="Journal of AI Research • 2024"
                           />

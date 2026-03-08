@@ -20,22 +20,22 @@ const FavoritePapers = () => {
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Navbar />
-      <Box sx={{ display: "flex", flex: 1, mt: "72px" }}>
+      <Box sx={{ display: "flex", flex: 1, mt: { xs: "64px", lg: "72px" } }}>
         <Sidebar />
         <Box
           component="main"
           sx={{
             flexGrow: 1,
-            p: { xs: 2, md: 4, lg: 6 },
+            p: { xs: 2, sm: 3, md: 4, lg: 6 },
             ml: { lg: "280px", xs: 0 },
             background: "#F8FAFF",
             minHeight: "calc(100vh - 72px)"
           }}
         >
           <Container maxWidth="md">
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4 }}>
-              <BookmarkIcon sx={{ fontSize: 32, color: "#101828" }} />
-              <Typography variant="h4">Favorite Papers</Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4, flexWrap: "wrap" }}>
+              <BookmarkIcon sx={{ fontSize: { xs: 24, sm: 32 }, color: "#101828" }} />
+              <Typography variant="h4" sx={{ fontSize: { xs: "1.5rem", sm: "2.125rem" } }}>Favorite Papers</Typography>
             </Box>
 
             <Card sx={{ p: 0 }}>
@@ -45,7 +45,7 @@ const FavoritePapers = () => {
                     <ListItem
                       sx={{
                         py: 2,
-                        px: 3,
+                        px: { xs: 2, sm: 3 },
                         "&:hover": { bgcolor: "#F9FAFB" }
                       }}
                       secondaryAction={
@@ -63,7 +63,9 @@ const FavoritePapers = () => {
                         primary={paper} 
                         primaryTypographyProps={{ 
                           fontWeight: 500,
-                          color: "#101828"
+                          color: "#101828",
+                          variant: "body1",
+                          sx: { pr: 4 } // Ensure text doesn't overlap with delete icon on mobile
                         }}
                       />
                     </ListItem>

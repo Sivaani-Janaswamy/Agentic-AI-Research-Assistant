@@ -29,35 +29,35 @@ const PdfUpload = () => {
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Navbar />
-      <Box sx={{ display: "flex", flex: 1, mt: "72px" }}>
+      <Box sx={{ display: "flex", flex: 1, mt: { xs: "64px", lg: "72px" } }}>
         <Sidebar />
         <Box
           component="main"
           sx={{
             flexGrow: 1,
-            p: { xs: 2, md: 4, lg: 6 },
+            p: { xs: 2, sm: 3, md: 4, lg: 6 },
             ml: { lg: "280px", xs: 0 },
             background: "#F8FAFF",
             minHeight: "calc(100vh - 72px)"
           }}
         >
           <Container maxWidth="md">
-            <Typography variant="h4" sx={{ mb: 4, fontWeight: 700 }}>
+            <Typography variant="h4" sx={{ mb: 4, fontWeight: 700, fontSize: { xs: "1.75rem", sm: "2.125rem" } }}>
               PDF Upload & AI Summary
             </Typography>
 
-            <Card sx={{ p: 6, mb: 4, textAlign: "center", border: "2px dashed #EAECF0", bgcolor: "#F9FAFB", boxShadow: "none" }}>
+            <Card sx={{ p: { xs: 3, sm: 6 }, mb: 4, textAlign: "center", border: "2px dashed #EAECF0", bgcolor: "#F9FAFB", boxShadow: "none" }}>
               <Box sx={{ mb: 3 }}>
-                <CloudUploadIcon sx={{ fontSize: 48, color: "#667085" }} />
+                <CloudUploadIcon sx={{ fontSize: { xs: 36, sm: 48 }, color: "#667085" }} />
               </Box>
-              <Typography variant="h6" sx={{ mb: 1 }}>Choose a PDF file to analyze</Typography>
+              <Typography variant="h6" sx={{ mb: 1, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>Choose a PDF file to analyze</Typography>
               <Typography variant="body2" sx={{ mb: 3, color: "#667085" }}>Maximum file size: 25MB</Typography>
               
-              <Stack direction="row" spacing={2} justifyContent="center" alignItems="center">
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="center" alignItems="center">
                 <Button
                   variant="outlined"
                   component="label"
-                  sx={{ borderColor: "#D0D5DD", color: "#344054", bgcolor: "#fff", "&:hover": { bgcolor: "#F9FAFB" } }}
+                  sx={{ width: { xs: "100%", sm: "auto" }, borderColor: "#D0D5DD", color: "#344054", bgcolor: "#fff", "&:hover": { bgcolor: "#F9FAFB" } }}
                 >
                   Browse File
                   <input
@@ -72,7 +72,8 @@ const PdfUpload = () => {
                     variant="contained" 
                     onClick={handleUpload} 
                     disabled={uploading}
-                    sx={{ bgcolor: "#101828", "&:hover": { bgcolor: "#1D2939" } }}
+                    fullWidth={false}
+                    sx={{ width: { xs: "100%", sm: "auto" }, bgcolor: "#101828", "&:hover": { bgcolor: "#1D2939" } }}
                   >
                     {uploading ? 'Processing...' : 'Generate Summary'}
                   </Button>
@@ -82,7 +83,7 @@ const PdfUpload = () => {
               {file && (
                 <Box sx={{ mt: 3, display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}>
                   <PictureAsPdfIcon sx={{ color: "#D92D20" }} />
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{file.name}</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500, wordBreak: "break-all" }}>{file.name}</Typography>
                 </Box>
               )}
             </Card>
@@ -97,13 +98,13 @@ const PdfUpload = () => {
             )}
 
             {summary && (
-              <Card sx={{ p: 4, mt: 4 }}>
-                <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>AI Generated Summary</Typography>
+              <Card sx={{ p: { xs: 3, sm: 4 }, mt: 4 }}>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>AI Generated Summary</Typography>
                 <Divider sx={{ mb: 3 }} />
                 <Typography variant="body1" sx={{ lineHeight: 1.8, color: "#344054" }}>
                   {summary}
                 </Typography>
-                <Box sx={{ mt: 4, display: "flex", gap: 2 }}>
+                <Box sx={{ mt: 4, display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" } }}>
                   <Button size="small" variant="text" sx={{ color: "#475467" }}>Copy to Clipboard</Button>
                   <Button size="small" variant="text" sx={{ color: "#475467" }}>Save to Library</Button>
                 </Box>
