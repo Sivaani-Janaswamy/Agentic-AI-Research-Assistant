@@ -4,6 +4,14 @@ pydantic
 groq
 python-dotenv
 requests
-faiss-cpu
 sentence-transformers
 arxiv
+pymupdf
+python-multipart
+sqlalchemy
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
+chromadb
+google-auth
+email-validator
