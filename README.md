@@ -3,7 +3,11 @@
 
 **Agentic AI Research Assistant** is an AI-powered tool that helps researchers retrieve, summarize, and analyze scientific papers. It leverages multiple AI agents to extract insights, highlight research gaps, and answer questions based on your documents.
 
----
+**Render URL**
+- https://agentic-ai-research-assistant.onrender.com/docs
+  
+**Vercel URL**
+- https://agentic-ai-research-assistant-two.vercel.app/
 
 ## Features
 - Retrieve research papers based on a query
