@@ -9,7 +9,7 @@ arxiv
 pymupdf
 python-multipart
 sqlalchemy
-passlib[bcrypt]
+passlib[argon2]
 python-jose[cryptography]
 python-multipart
 chromadb
