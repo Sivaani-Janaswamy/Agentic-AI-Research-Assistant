@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
-import MultiPaperComparison from './pages/MultiPaperComparison';
+import PaperComparison from './pages/PaperComparison';
 import PdfUpload from './pages/PdfUpload';
 import ResearchGapDetector from './pages/ResearchGapDetector';
 import RelatedPapers from './pages/RelatedPapers';
@@ -13,7 +13,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/MutliPaperComparison" element={<MultiPaperComparison />} />
+      <Route path="/PaperComparison" element={<PaperComparison />} />
       <Route path="/PdfUpload" element={<PdfUpload />} />
       <Route path="/ResearchGapDetector" element={<ResearchGapDetector />} />
       <Route path="/RelatedPapers" element={<RelatedPapers />} />

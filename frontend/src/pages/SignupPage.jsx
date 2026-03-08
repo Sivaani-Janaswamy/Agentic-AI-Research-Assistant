@@ -1,64 +1,59 @@
 import React from 'react';
-import { Container, Box, TextField, Button, Typography, Link } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper, Container, Link as MuiLink, Divider, Stack } from '@mui/material';
+import { Link } from 'react-router-dom';
+import GoogleIcon from '@mui/icons-material/Google';
+import Navbar from "../components/Navbar";
 
 const SignupPage = () => {
   return (
-    <Container maxWidth="xs">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Typography component="h1" variant="h5">
-          Sign Up
-        </Typography>
-        <Box component="form" sx={{ mt: 1 }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="name"
-            label="Name"
-            name="name"
-            autoComplete="name"
-            autoFocus
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="new-password"
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-          >
-            Sign Up
-          </Button>
-          <Link href="/login" variant="body2">
-            {"Already have an account? Login"}
-          </Link>
-        </Box>
-      </Box>
-    </Container>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#F8FAFF" }}>
+      <Navbar />
+      <Container maxWidth="sm" sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", py: 8 }}>
+        <Paper sx={{ p: 5, width: "100%", textAlign: "center", borderRadius: "16px", boxShadow: "0px 8px 24px rgba(0,0,0,0.05)" }}>
+          <Typography variant="h4" sx={{ mb: 1, fontWeight: 700 }}>Create an account</Typography>
+          <Typography variant="body2" sx={{ mb: 4, color: "#667085" }}>Join thousands of researchers worldwide</Typography>
+          
+          <Stack spacing={2.5}>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<GoogleIcon />}
+              sx={{ py: 1.2, borderColor: "#D0D5DD", color: "#344054", fontWeight: 600 }}
+            >
+              Sign up with Google
+            </Button>
+
+            <Divider sx={{ my: 1 }}><Typography variant="caption" color="text.secondary">OR</Typography></Divider>
+
+            <TextField fullWidth label="Full Name" placeholder="Jane Doe" />
+            <TextField fullWidth label="Email address" placeholder="name@company.com" />
+            <TextField fullWidth label="Password" type="password" />
+
+            <Typography variant="caption" sx={{ color: "#667085", textAlign: "left" }}>
+              By signing up, you agree to our{' '}
+              <MuiLink href="#" sx={{ color: "#101828", fontWeight: 600, textDecoration: "none" }}>Terms of Service</MuiLink>
+              {' '}and{' '}
+              <MuiLink href="#" sx={{ color: "#101828", fontWeight: 600, textDecoration: "none" }}>Privacy Policy</MuiLink>.
+            </Typography>
+
+            <Button
+              fullWidth
+              variant="contained"
+              sx={{ py: 1.5, bgcolor: "#101828", "&:hover": { bgcolor: "#1D2939" }, fontWeight: 700 }}
+            >
+              Get Started
+            </Button>
+          </Stack>
+
+          <Typography variant="body2" sx={{ mt: 4, color: "#667085" }}>
+            Already have an account?{' '}
+            <MuiLink component={Link} to="/login" sx={{ fontWeight: 600, color: "#101828", textDecoration: "none" }}>
+              Log in
+            </MuiLink>
+          </Typography>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 

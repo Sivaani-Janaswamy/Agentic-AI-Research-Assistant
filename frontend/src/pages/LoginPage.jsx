@@ -1,71 +1,57 @@
-import React, { useState } from 'react';
-import { Container, Box, TextField, Button, Typography, Link } from '@mui/material';
+import React from 'react';
+import { Box, Typography, TextField, Button, Paper, Container, Link as MuiLink, Divider, Stack } from '@mui/material';
+import { Link } from 'react-router-dom';
+import GoogleIcon from '@mui/icons-material/Google';
+import Navbar from "../components/Navbar";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    console.log({
-      email,
-      password,
-    });
-    // Add your login logic here
-  };
-
   return (
-    <Container maxWidth="xs">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Typography component="h1" variant="h5">
-          Login
-        </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            autoFocus
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-          >
-            Login
-          </Button>
-          <Link href="/signup" variant="body2">
-            {"Don't have an account? Sign Up"}
-          </Link>
-        </Box>
-      </Box>
-    </Container>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#F8FAFF" }}>
+      <Navbar />
+      <Container maxWidth="sm" sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", py: 8 }}>
+        <Paper sx={{ p: 5, width: "100%", textAlign: "center", borderRadius: "16px", boxShadow: "0px 8px 24px rgba(0,0,0,0.05)" }}>
+          <Typography variant="h4" sx={{ mb: 1, fontWeight: 700 }}>Welcome Back</Typography>
+          <Typography variant="body2" sx={{ mb: 4, color: "#667085" }}>Log in to your AI Researcher account</Typography>
+          
+          <Stack spacing={2.5}>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<GoogleIcon />}
+              sx={{ py: 1.2, borderColor: "#D0D5DD", color: "#344054", fontWeight: 600 }}
+            >
+              Sign in with Google
+            </Button>
+
+            <Divider sx={{ my: 1 }}><Typography variant="caption" color="text.secondary">OR</Typography></Divider>
+
+            <TextField fullWidth label="Email address" placeholder="name@company.com" />
+            <TextField fullWidth label="Password" type="password" />
+
+            <Box sx={{ textAlign: "right" }}>
+              <MuiLink component={Link} to="#" sx={{ fontSize: "0.85rem", fontWeight: 600, color: "#101828", textDecoration: "none" }}>
+                Forgot password?
+              </MuiLink>
+            </Box>
+
+            <Button
+              fullWidth
+              variant="contained"
+              sx={{ py: 1.5, bgcolor: "#101828", "&:hover": { bgcolor: "#1D2939" }, fontWeight: 700 }}
+            >
+              Sign In
+            </Button>
+          </Stack>
+
+          <Typography variant="body2" sx={{ mt: 4, color: "#667085" }}>
+            Don't have an account?{' '}
+            <MuiLink component={Link} to="/signup" sx={{ fontWeight: 600, color: "#101828", textDecoration: "none" }}>
+              Sign up
+            </MuiLink>
+          </Typography>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 

@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Container, Typography } from "@mui/material";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
@@ -6,45 +6,50 @@ import PaperCard from "../components/PaperCard";
 import Searchbar from "../components/Searchbar";
 
 function Home() {
-
   return (
-    <Box sx={{ minHeight: "100vh", background: "#F8FAFF" }}>
-
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       {/* Navbar */}
       <Navbar />
 
-      {/* History Sidebar */}
-      <Sidebar />
+      <Box sx={{ display: "flex", flex: 1, mt: "72px" }}>
+        {/* History Sidebar */}
+        <Sidebar />
 
-      {/* Main Content */}
-      <Box
-        sx={{
-          mt: 10, // Margin top to clear the fixed Navbar
-          p: 3, // Consistent padding around the main content
-          ml: { lg: "280px", xs: 0 } // Adjust ml to match new Sidebar width
-        }}
-      >
+        {/* Main Content */}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: { xs: 2, md: 4, lg: 6 },
+            ml: { lg: "280px", xs: 0 },
+            background: "#F8FAFF",
+            minHeight: "calc(100vh - 72px)"
+          }}
+        >
+          <Container maxWidth="md">
+            {/* Search Bar */}
+            <Box sx={{ mb: 6 }}>
+              <Searchbar />
+            </Box>
 
-        {/* Search Bar */}
-        <Box sx={{ mb: 4 }}> {/* Consistent margin bottom after searchbar */}
-          <Searchbar />
+            {/* Section Heading */}
+            <Typography variant="h5" sx={{ mb: 3, fontWeight: 700 }}>
+              Recent Research Papers
+            </Typography>
+
+            {/* Paper Cards (Vertical Stack) */}
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <PaperCard />
+              <PaperCard />
+              <PaperCard />
+              <PaperCard />
+            </Box>
+          </Container>
         </Box>
-
-        {/* Paper Cards (Vertical Stack) */}
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-
-          <PaperCard />
-          <PaperCard />
-          <PaperCard />
-          <PaperCard />
-
-        </Box>
-
       </Box>
 
       {/* Footer */}
       <Footer />
-
     </Box>
   );
 }

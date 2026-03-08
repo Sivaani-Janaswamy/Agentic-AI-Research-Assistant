@@ -54,7 +54,7 @@ const Navbar = () => {
             Home
           </Typography>
 
-          <Typography component={Link} to="/MultiPaperComparison" sx={navStyle}>
+          <Typography component={Link} to="/PaperComparison" sx={navStyle}>
             Paper Comparison
           </Typography>
 

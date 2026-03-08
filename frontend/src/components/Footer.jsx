@@ -1,24 +1,26 @@
 import React from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Container, Divider } from "@mui/material";
 
 const Footer = () => {
   return (
     <Box
+      component="footer"
       sx={{
         width: "100%",
-        mt: 5,
-        py: 2,
-        textAlign: "center",
+        mt: "auto",
+        py: 4,
         background: "#F8FAFF",
-        borderTop: "1px solid #D6E9FF"
+        borderTop: "1px solid #EAECF0"
       }}
     >
-      <Typography
-        variant="body2"
-        sx={{ color: "#374151" }}
-      >
-        © {new Date().getFullYear()} AI Research Assistant | Built for Smart Research
-      </Typography>
+      <Container maxWidth="lg">
+        <Typography
+          variant="body2"
+          sx={{ color: "#667085", textAlign: "center", fontWeight: 500 }}
+        >
+          © {new Date().getFullYear()} AI Researcher | Empowering Academic Discovery
+        </Typography>
+      </Container>
     </Box>
   );
 };

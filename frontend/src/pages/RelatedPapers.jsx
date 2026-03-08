@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Paper, List, ListItem, ListItemText } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper, List, ListItem, ListItemText, Container, Card, Divider, InputAdornment } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 
 const RelatedPapers = () => {
   const [topic, setTopic] = useState('');
@@ -13,46 +17,107 @@ const RelatedPapers = () => {
     setTimeout(() => {
       setLoading(false);
       setPapers([
-        'Related Paper 1',
-        'Related Paper 2',
-        'Related Paper 3',
+        'Related Paper 1: AI Safety Guidelines',
+        'Related Paper 2: Blockchain and Finance',
+        'Related Paper 3: Robotics in Agriculture',
       ]);
-    }, 2000);
+    }, 1500);
   };
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
-        Related papers suggestions
-      </Typography>
-      <Paper sx={{ p: 2 }}>
-        <TextField
-          fullWidth
-          label="Enter a topic or paper"
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
-        />
-        <Button
-          variant="contained"
-          onClick={handleFindPapers}
-          sx={{ mt: 2 }}
-          disabled={!topic || loading}
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <Navbar />
+      <Box sx={{ display: "flex", flex: 1, mt: "72px" }}>
+        <Sidebar />
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: { xs: 2, md: 4, lg: 6 },
+            ml: { lg: "280px", xs: 0 },
+            background: "#F8FAFF",
+            minHeight: "calc(100vh - 72px)"
+          }}
         >
-          {loading ? 'Finding...' : 'Find Papers'}
-        </Button>
-        {papers.length > 0 && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6">Related Papers</Typography>
-            <List>
-              {papers.map((paper, index) => (
-                <ListItem key={index}>
-                  <ListItemText primary={paper} />
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-        )}
-      </Paper>
+          <Container maxWidth="md">
+            <Typography variant="h4" sx={{ mb: 4, fontWeight: 700 }}>
+              Related Papers Suggestions
+            </Typography>
+
+            <Card sx={{ p: 4, mb: 6 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>Search by Topic or Paper Title</Typography>
+              <TextField
+                fullWidth
+                placeholder="Enter a research area (e.g., 'Quantum Computing')"
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: "#667085" }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ 
+                  "& .MuiOutlinedInput-root": {
+                    bgcolor: "#F9FAFB",
+                    "&:hover fieldset": { borderColor: "#101828" },
+                  }
+                }}
+              />
+              <Button
+                variant="contained"
+                onClick={handleFindPapers}
+                sx={{ 
+                  mt: 3, 
+                  bgcolor: "#101828", 
+                  color: "#fff",
+                  px: 4,
+                  py: 1,
+                  "&:hover": { bgcolor: "#1D2939" }
+                }}
+                disabled={!topic || loading}
+                fullWidth
+              >
+                {loading ? 'Analyzing topic...' : 'Find Related Papers'}
+              </Button>
+            </Card>
+
+            {papers.length > 0 && (
+              <Box>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>Recommended Papers</Typography>
+                <Card sx={{ p: 0 }}>
+                  <List sx={{ p: 0 }}>
+                    {papers.map((paper, index) => (
+                      <React.Fragment key={index}>
+                        <ListItem
+                          sx={{
+                            py: 2,
+                            px: 3,
+                            "&:hover": { bgcolor: "#F9FAFB" },
+                            cursor: "pointer"
+                          }}
+                        >
+                          <ListItemText 
+                            primary={paper} 
+                            primaryTypographyProps={{ 
+                              fontWeight: 500,
+                              color: "#101828"
+                            }}
+                            secondary="Journal of AI Research • 2024"
+                          />
+                        </ListItem>
+                        {index < papers.length - 1 && <Divider />}
+                      </React.Fragment>
+                    ))}
+                  </List>
+                </Card>
+              </Box>
+            )}
+          </Container>
+        </Box>
+      </Box>
+      <Footer />
     </Box>
   );
 };
