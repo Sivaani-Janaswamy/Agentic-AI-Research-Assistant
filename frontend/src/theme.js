@@ -10,7 +10,7 @@ const theme = createTheme({
       main: "#b0c4de", // Light Steel Blue
     },
     background: {
-      default: "#f0f8ff", // Alice Blue
+      default: "#F8FAFF", // Updated to match the requested design
       paper: "#ffffff",
     },
   },
@@ -18,7 +18,7 @@ const theme = createTheme({
     fontFamily: "Roboto, sans-serif",
   },
   shape: {
-    borderRadius: 8,
+    borderRadius: 10, // Updated to 10px for rounded corners
   },
 });
 

@@ -16,9 +16,9 @@ const PaperCard = () => {
     <Card
       sx={{
         width: "100%",
-        borderRadius: "10px",
-        boxShadow: "none",
-        border: "1px solid #e0e0e0",
+        borderRadius: "10px", // Already 10px, matches desired
+        boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.05)", // Soft shadow
+        border: "1px solid #e0e0e0", // Existing soft border
         background: "#fff"
       }}
     >
@@ -26,9 +26,9 @@ const PaperCard = () => {
 
         {/* Title */}
         <Typography
-          variant="h6"
+          variant="h5" // Slightly stronger title variant
           sx={{
-            fontWeight: 600,
+            fontWeight: 700, // Make title bolder
             mb: 1
           }}
         >
@@ -39,8 +39,9 @@ const PaperCard = () => {
         <Typography
           variant="subtitle2"
           sx={{
-            color: "#666",
-            mb: 2
+            color: "#666", // Subtle color
+            mb: 2,
+            fontStyle: 'italic' // Make authors more subtle
           }}
         >
           Author Name
@@ -76,7 +77,11 @@ const PaperCard = () => {
             startIcon={<SaveIcon />}
             sx={{
               textTransform: "none",
-              color: "#000"
+              color: "black", // Use primary color for consistency
+              '&:hover': {
+                backgroundColor: 'lightgray', // Subtle hover effect
+                color: 'primary.contrastText', // Ensure readability on hover
+              }
             }}
           >
             Save
@@ -87,7 +92,11 @@ const PaperCard = () => {
             startIcon={<PictureAsPdfIcon />}
             sx={{
               textTransform: "none",
-              color: "#000"
+              color: "black", // Use primary color for consistency
+              '&:hover': {
+                backgroundColor: 'lightgray', // Subtle hover effect
+                color: 'primary.contrastText', // Ensure readability on hover
+              }
             }}
           >
             Download PDF
