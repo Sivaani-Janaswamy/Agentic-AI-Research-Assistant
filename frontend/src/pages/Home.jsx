@@ -1,0 +1,52 @@
+import { Box } from "@mui/material";
+import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
+import PaperCard from "../components/PaperCard";
+import Searchbar from "../components/Searchbar";
+
+function Home() {
+
+  return (
+    <Box sx={{ minHeight: "100vh", background: "#F8FAFF" }}>
+
+      {/* Navbar */}
+      <Navbar />
+
+      {/* History Sidebar */}
+      <Sidebar />
+
+      {/* Main Content */}
+      <Box
+        sx={{
+          mt: 10,
+          p: 2,
+          ml: { lg: "300px", xs: 0 }
+        }}
+      >
+
+        {/* Search Bar */}
+        <Box sx={{ mb: 4 }}>
+          <Searchbar />
+        </Box>
+
+        {/* Paper Cards (Vertical Stack) */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+
+          <PaperCard />
+          <PaperCard />
+          <PaperCard />
+          <PaperCard />
+
+        </Box>
+
+      </Box>
+
+      {/* Footer */}
+      <Footer />
+
+    </Box>
+  );
+}
+
+export default Home;
