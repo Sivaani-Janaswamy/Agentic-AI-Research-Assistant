@@ -3,7 +3,13 @@ import { Box, InputBase, IconButton } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import MenuIcon from "@mui/icons-material/Menu";
 
-const Searchbar = () => {
+const Searchbar = ({ value, onChange, onSearch }) => {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      onSearch && onSearch();
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -31,7 +37,10 @@ const Searchbar = () => {
 
         {/* Input */}
         <InputBase
-          placeholder="Hinted search text"
+          placeholder="Search for research papers..."
+          value={value}
+          onChange={(e) => onChange && onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
           sx={{
             flex: 1,
             color: "white",
@@ -41,7 +50,7 @@ const Searchbar = () => {
         />
 
         {/* Search Icon */}
-        <IconButton sx={{ color: "white" }}>
+        <IconButton sx={{ color: "white" }} onClick={onSearch}>
           <SearchIcon />
         </IconButton>
       </Box>

@@ -1,10 +1,31 @@
-import React from 'react';
-import { Box, Typography, TextField, Button, Paper, Container, Link as MuiLink, Divider, Stack } from '@mui/material';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Box, Typography, TextField, Button, Paper, Container, Link as MuiLink, Divider, Stack, CircularProgress } from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom';
 import GoogleIcon from '@mui/icons-material/Google';
 import Navbar from "../components/Navbar";
+import { signup } from "../api/auth";
 
 const SignupPage = () => {
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSignup = async () => {
+    if (!email || !password || !fullName) return;
+    setLoading(true);
+    try {
+      await signup({ full_name: fullName, email, password });
+      navigate('/');
+    } catch (error) {
+      console.error("Signup failed:", error);
+      alert("Signup failed. Email might already be registered.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#F8FAFF" }}>
       <Navbar />
@@ -25,9 +46,27 @@ const SignupPage = () => {
 
             <Divider sx={{ my: 1 }}><Typography variant="caption" color="text.secondary">OR</Typography></Divider>
 
-            <TextField fullWidth label="Full Name" placeholder="Jane Doe" />
-            <TextField fullWidth label="Email address" placeholder="name@company.com" />
-            <TextField fullWidth label="Password" type="password" />
+            <TextField 
+              fullWidth 
+              label="Full Name" 
+              placeholder="Jane Doe" 
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+            <TextField 
+              fullWidth 
+              label="Email address" 
+              placeholder="name@company.com" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <TextField 
+              fullWidth 
+              label="Password" 
+              type="password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
 
             <Typography variant="caption" sx={{ color: "#667085", textAlign: "left" }}>
               By signing up, you agree to our{' '}
@@ -39,9 +78,11 @@ const SignupPage = () => {
             <Button
               fullWidth
               variant="contained"
+              onClick={handleSignup}
+              disabled={loading}
               sx={{ py: 1.5, bgcolor: "#101828", "&:hover": { bgcolor: "#1D2939" }, fontWeight: 700 }}
             >
-              Get Started
+              {loading ? <CircularProgress size={24} color="inherit" /> : 'Get Started'}
             </Button>
           </Stack>
 

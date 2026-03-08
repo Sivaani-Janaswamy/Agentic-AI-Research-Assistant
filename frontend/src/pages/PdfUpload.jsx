@@ -1,29 +1,35 @@
 import React, { useState } from 'react';
-import { Box, Typography, Button, Card, LinearProgress, Container, Divider, Stack } from '@mui/material';
+import { Box, Typography, Button, Card, LinearProgress, Container, Divider, Stack, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import { summarizePdf } from "../api/analysis";
 
 const PdfUpload = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [summary, setSummary] = useState('');
+  const [result, setResult] = useState(null);
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!file) return;
     setUploading(true);
-    setSummary('');
-    // Simulate upload and summary generation
-    setTimeout(() => {
+    setResult(null);
+    try {
+      const data = await summarizePdf(file);
+      setResult(data);
+    } catch (error) {
+      console.error("Error uploading/summarizing:", error);
+      alert("Failed to process PDF. Please try again.");
+    } finally {
       setUploading(false);
-      setSummary('This research paper discusses the integration of artificial intelligence in modern cybersecurity frameworks. It highlights how machine learning algorithms can predict and neutralize threats in real-time, significantly reducing the response time compared to traditional manual monitoring systems.');
-    }, 3000);
+    }
   };
 
   return (
@@ -97,15 +103,37 @@ const PdfUpload = () => {
               </Box>
             )}
 
-            {summary && (
+            {result && (
               <Card sx={{ p: { xs: 3, sm: 4 }, mt: 4 }}>
-                <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>AI Generated Summary</Typography>
+                <Typography variant="h5" sx={{ mb: 1, fontWeight: 700 }}>{result.title}</Typography>
+                <Typography variant="subtitle2" sx={{ mb: 3, color: "#667085" }}>Authors: {result.authors?.join(", ") || "Unknown"}</Typography>
+                
                 <Divider sx={{ mb: 3 }} />
-                <Typography variant="body1" sx={{ lineHeight: 1.8, color: "#344054" }}>
-                  {summary}
+                
+                <Typography variant="h6" sx={{ mb: 1, fontWeight: 700, fontSize: "1.1rem" }}>Summary</Typography>
+                <Typography variant="body1" sx={{ lineHeight: 1.8, color: "#344054", mb: 3 }}>
+                  {result.summary}
                 </Typography>
+
+                <Typography variant="h6" sx={{ mb: 1, fontWeight: 700, fontSize: "1.1rem" }}>Methodology</Typography>
+                <Typography variant="body2" sx={{ lineHeight: 1.6, color: "#475467", mb: 3 }}>
+                  {result.methodology}
+                </Typography>
+
+                <Typography variant="h6" sx={{ mb: 1, fontWeight: 700, fontSize: "1.1rem" }}>Key Findings</Typography>
+                <List>
+                  {result.key_findings?.map((finding, idx) => (
+                    <ListItem key={idx} sx={{ px: 0, py: 0.5 }}>
+                      <ListItemIcon sx={{ minWidth: 32 }}>
+                        <CheckCircleIcon sx={{ fontSize: 18, color: "#12B76A" }} />
+                      </ListItemIcon>
+                      <ListItemText primary={finding} primaryTypographyProps={{ variant: "body2", color: "#344054" }} />
+                    </ListItem>
+                  ))}
+                </List>
+
                 <Box sx={{ mt: 4, display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" } }}>
-                  <Button size="small" variant="text" sx={{ color: "#475467" }}>Copy to Clipboard</Button>
+                  <Button size="small" variant="text" sx={{ color: "#475467" }} onClick={() => navigator.clipboard.writeText(result.summary)}>Copy Summary</Button>
                   <Button size="small" variant="text" sx={{ color: "#475467" }}>Save to Library</Button>
                 </Box>
               </Card>

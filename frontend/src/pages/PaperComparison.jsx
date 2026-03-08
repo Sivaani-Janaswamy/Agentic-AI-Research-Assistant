@@ -1,27 +1,90 @@
-import React, { useState } from 'react';
-import { Box, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Container, Card, Divider, Chip, Stack } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import {
+  Box, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, Container, Card, Stack, CircularProgress, Checkbox, FormControlLabel
+} from '@mui/material';
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import { comparePapers } from "../api/analysis";
+import { getFavorites } from "../api/papers";
 
 const PaperComparison = () => {
   const [comparing, setComparing] = useState(false);
   const [results, setResults] = useState(null);
+  const [favorites, setFavorites] = useState([]);
+  const [selected, setSelected] = useState({});
+  const [loadingFavs, setLoadingFavs] = useState(true);
 
-  const handleCompare = () => {
+  useEffect(() => {
+    fetchFavs();
+  }, []);
+
+  const fetchFavs = async () => {
+    try {
+      const data = await getFavorites();
+      setFavorites(data || []);
+      const initialSelected = {};
+      (data || []).forEach(f => initialSelected[f.paper_id] = false);
+      setSelected(initialSelected);
+    } catch (e) {
+      console.error("Failed to fetch favorites:", e);
+    } finally {
+      setLoadingFavs(false);
+    }
+  };
+
+  const handleSelect = (paperId) => {
+    setSelected(prev => {
+      const newSelected = { ...prev, [paperId]: !prev[paperId] };
+      return newSelected;
+    });
+  };
+
+  const transformData = (papers = []) => {
+    if (!papers.length) return [];
+
+    const metrics = [
+      { key: 'accuracy', label: 'Accuracy / Performance' },
+      { key: 'speed', label: 'Inference / Speed' },
+      { key: 'dataset', label: 'Dataset Used' },
+      { key: 'hardware', label: 'Hardware Requirements' },
+    ];
+
+    return metrics.map(m => ({
+      metric: m.label,
+      ...papers.reduce((acc, p, idx) => {
+        acc[`paper${idx + 1}`] = p[m.key] || 'N/A';
+        return acc;
+      }, {})
+    }));
+  };
+
+  const handleCompare = async () => {
+    const selectedIds = Object.keys(selected).filter(id => selected[id]);
+    if (selectedIds.length < 2 || selectedIds.length > 3) {
+      alert("Please select 2-3 papers to compare.");
+      return;
+    }
+
     setComparing(true);
-    // Simulate comparison logic
-    setTimeout(() => {
+    try {
+      const data = await comparePapers(selectedIds);
+      const papersArray = data?.papers || [];
+      if (!papersArray.length) {
+        alert("No papers returned from comparison API.");
+        setComparing(false);
+        return;
+      }
+      const transformed = transformData(papersArray);
+      setResults({ papers: papersArray, matrix: transformed });
+    } catch (error) {
+      console.error("Comparison error:", error);
+      alert("Failed to generate comparison matrix.");
+    } finally {
       setComparing(false);
-      setResults([
-        { metric: 'Core Methodology', paper1: 'Transformer-based', paper2: 'CNN-based', paper3: 'Hybrid' },
-        { metric: 'Accuracy (Top-1)', paper1: '94.2%', paper2: '91.8%', paper3: '95.1%' },
-        { metric: 'Inference Speed', paper1: 'Fast', paper2: 'Very Fast', paper3: 'Medium' },
-        { metric: 'Dataset Size', paper1: '1.2B tokens', paper2: '800M tokens', paper3: '2.5B tokens' },
-        { metric: 'Hardware Requirements', paper1: 'V100 GPU', paper2: 'P100 GPU', paper3: 'A100 GPU' },
-      ]);
-    }, 2000);
+    }
   };
 
   return (
@@ -42,62 +105,86 @@ const PaperComparison = () => {
           <Container maxWidth="lg">
             <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1, flexWrap: "wrap" }}>
               <CompareArrowsIcon sx={{ color: "#101828", fontSize: { xs: 24, sm: 28 } }} />
-              <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: "1.5rem", sm: "2.125rem" } }}>Paper Comparison</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: "1.5rem", sm: "2.125rem" } }}>
+                Paper Comparison
+              </Typography>
             </Box>
             <Typography variant="body1" sx={{ mb: 4, color: "#667085", fontSize: { xs: "0.9rem", sm: "1rem" } }}>
-              Compare multiple research papers across key metrics and methodologies.
+              Select papers to compare across key metrics and methodologies.
             </Typography>
 
-            <Card sx={{ p: { xs: 3, sm: 4 }, mb: 6, textAlign: "center" }}>
-              <Typography variant="h6" sx={{ mb: 2, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>Ready to compare your selected papers?</Typography>
-              <Typography variant="body2" sx={{ mb: 4, color: "#667085" }}>You have selected 3 papers from your library.</Typography>
+            <Card sx={{ p: { xs: 3, sm: 4 }, mb: 6 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>
+                {loadingFavs ? "Loading your library..." : `You have ${favorites.length} papers in your library.`}
+              </Typography>
+              <Stack direction="column" spacing={1} sx={{ mb: 3 }}>
+                {favorites.map(f => (
+                  <FormControlLabel
+                    key={f.paper_id}
+                    control={<Checkbox checked={selected[f.paper_id] || false} onChange={() => handleSelect(f.paper_id)} />}
+                    label={f.title}
+                  />
+                ))}
+              </Stack>
               <Button
                 variant="contained"
                 onClick={handleCompare}
-                disabled={comparing}
-                sx={{ 
-                  bgcolor: "#101828", 
-                  "&:hover": { bgcolor: "#1D2939" }, 
-                  px: { xs: 3, sm: 6 }, 
+                disabled={comparing || loadingFavs}
+                sx={{
+                  bgcolor: "#101828",
+                  "&:hover": { bgcolor: "#1D2939" },
+                  px: { xs: 3, sm: 6 },
                   py: 1.5,
                   borderRadius: "30px",
                   fontSize: { xs: "0.875rem", sm: "1rem" }
                 }}
               >
-                {comparing ? 'Generating Comparison...' : 'Start Comparison Matrix'}
+                {comparing ? <CircularProgress size={24} color="inherit" /> : 'Start Comparison Matrix'}
               </Button>
             </Card>
 
-            {results && (
+            {results && results.matrix.length > 0 && (
               <Box>
-                <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>Comparison Matrix</Typography>
+                <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>
+                  Comparison Matrix
+                </Typography>
                 <TableContainer component={Card} sx={{ boxShadow: "none", border: "1px solid #EAECF0", overflowX: "auto" }}>
                   <Table sx={{ minWidth: { xs: 800, lg: "100%" } }}>
                     <TableHead sx={{ bgcolor: "#F9FAFB" }}>
                       <TableRow>
                         <TableCell sx={{ fontWeight: 700, color: "#475467", py: 2 }}>Metric</TableCell>
-                        <TableCell sx={{ fontWeight: 700, color: "#101828", py: 2 }}>Paper A (Primary)</TableCell>
-                        <TableCell sx={{ fontWeight: 700, color: "#101828", py: 2 }}>Paper B</TableCell>
-                        <TableCell sx={{ fontWeight: 700, color: "#101828", py: 2 }}>Paper C</TableCell>
+                        {results.papers.map((p, idx) => (
+                          <TableCell key={p.id} sx={{ fontWeight: 700, color: "#101828", py: 2 }}>
+                            {p.title}
+                          </TableCell>
+                        ))}
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {results.map((row, index) => (
+                      {results.matrix.map((row, index) => (
                         <TableRow key={index} sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
                           <TableCell component="th" scope="row" sx={{ fontWeight: 600, color: "#475467", bgcolor: "#F9FAFB", py: 2 }}>
                             {row.metric}
                           </TableCell>
-                          <TableCell sx={{ color: "#101828", py: 2 }}>{row.paper1}</TableCell>
-                          <TableCell sx={{ color: "#101828", py: 2 }}>{row.paper2}</TableCell>
-                          <TableCell sx={{ color: "#101828", py: 2 }}>{row.paper3}</TableCell>
+                          {results.papers.map((_, idx) => (
+                            <TableCell key={idx} sx={{ color: "#101828", py: 2 }}>{row[`paper${idx + 1}`]}</TableCell>
+                          ))}
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </TableContainer>
-                <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }} spacing={2} sx={{ mt: 4 }}>
-                  <Typography variant="caption" color="text.secondary">Generated by AI Researcher • Mar 2024</Typography>
-                  <Button variant="outlined" sx={{ borderColor: "#D0D5DD", color: "#344054", width: { xs: "100%", sm: "auto" } }}>Export to Excel</Button>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: "flex-start", sm: "center" }}
+                  spacing={2}
+                  sx={{ mt: 4 }}
+                >
+                  <Typography variant="caption" color="text.secondary">Generated by AI Researcher</Typography>
+                  <Button variant="outlined" sx={{ borderColor: "#D0D5DD", color: "#344054", width: { xs: "100%", sm: "auto" } }}>
+                    Export to Excel
+                  </Button>
                 </Stack>
               </Box>
             )}

@@ -1,27 +1,28 @@
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Paper, List, ListItem, ListItemText, Container, Card, Divider, InputAdornment } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper, List, ListItem, ListItemText, Container, Card, Divider, InputAdornment, CircularProgress } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import { getRelatedPapers } from "../api/papers";
 
 const RelatedPapers = () => {
   const [topic, setTopic] = useState('');
   const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const handleFindPapers = () => {
+  const handleFindPapers = async () => {
     if (!topic) return;
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const data = await getRelatedPapers(topic);
+      setPapers(data.related_papers || []);
+    } catch (error) {
+      console.error("Error fetching related papers:", error);
+      alert("Failed to find related papers.");
+    } finally {
       setLoading(false);
-      setPapers([
-        'Related Paper 1: AI Safety Guidelines',
-        'Related Paper 2: Blockchain and Finance',
-        'Related Paper 3: Robotics in Agriculture',
-      ]);
-    }, 1500);
+    }
   };
 
   return (
@@ -79,7 +80,7 @@ const RelatedPapers = () => {
                 disabled={!topic || loading}
                 fullWidth
               >
-                {loading ? 'Analyzing topic...' : 'Find Related Papers'}
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Find Related Papers'}
               </Button>
             </Card>
 
@@ -89,7 +90,7 @@ const RelatedPapers = () => {
                 <Card sx={{ p: 0 }}>
                   <List sx={{ p: 0 }}>
                     {papers.map((paper, index) => (
-                      <React.Fragment key={index}>
+                      <React.Fragment key={paper.id || index}>
                         <ListItem
                           sx={{
                             py: 2,
@@ -97,15 +98,16 @@ const RelatedPapers = () => {
                             "&:hover": { bgcolor: "#F9FAFB" },
                             cursor: "pointer"
                           }}
+                          onClick={() => paper.pdf_url && window.open(paper.pdf_url, '_blank')}
                         >
                           <ListItemText 
-                            primary={paper} 
+                            primary={paper.title} 
                             primaryTypographyProps={{ 
                               fontWeight: 500,
                               color: "#101828",
                               variant: "body1"
                             }}
-                            secondary="Journal of AI Research • 2024"
+                            secondary={paper.authors || "Research Paper"}
                           />
                         </ListItem>
                         {index < papers.length - 1 && <Divider />}

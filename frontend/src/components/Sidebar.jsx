@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -7,27 +7,37 @@ import {
   List,
   ListItemButton,
   ListItemText,
-  useMediaQuery
+  useMediaQuery,
+  CircularProgress
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import HistoryIcon from "@mui/icons-material/History";
+import { getHistory } from "../api/papers";
+import { isAuthenticated } from "../api/auth";
 
 function Sidebar() {
   const isDesktop = useMediaQuery("(min-width:1024px)");
   const [visible, setVisible] = React.useState(true);
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const sessions = [
-    "Machine Learning Trends 2024",
-    "Deep Learning in Healthcare",
-    "Quantum Computing Basics",
-    "NLP for Customer Support",
-    "AI Safety Guidelines",
-    "Blockchain and Finance",
-    "Robotics in Agriculture",
-    "Smart Cities Research",
-    "Edge Computing Benefits",
-    "Graph Neural Networks"
-  ];
+  useEffect(() => {
+    if (isAuthenticated()) {
+      fetchHistory();
+    }
+  }, []);
+
+  const fetchHistory = async () => {
+    setLoading(true);
+    try {
+      const data = await getHistory();
+      setSessions(data.map(s => s.session_name));
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isDesktop || !visible) return null;
 
@@ -72,33 +82,44 @@ function Sidebar() {
 
       {/* History List */}
       <List sx={{ px: 0 }}>
-        {sessions.map((session, index) => (
-          <ListItemButton
-            key={index}
-            sx={{
-              borderRadius: "8px",
-              mb: 0.5,
-              py: 1,
-              px: 1.5,
-              "&:hover": {
-                backgroundColor: "#EAECF0",
-              }
-            }}
-          >
-            <ListItemText
-              primary={session}
-              primaryTypographyProps={{
-                variant: "body2",
-                fontWeight: 500,
-                color: "#475467",
-                noWrap: true,
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+            <CircularProgress size={20} color="inherit" />
+          </Box>
+        ) : sessions.length > 0 ? (
+          sessions.map((session, index) => (
+            <ListItemButton
+              key={index}
+              sx={{
+                borderRadius: "8px",
+                mb: 0.5,
+                py: 1,
+                px: 1.5,
+                "&:hover": {
+                  backgroundColor: "#EAECF0",
+                }
               }}
-            />
-          </ListItemButton>
-        ))}
+            >
+              <ListItemText
+                primary={session}
+                primaryTypographyProps={{
+                  variant: "body2",
+                  fontWeight: 500,
+                  color: "#475467",
+                  noWrap: true,
+                }}
+              />
+            </ListItemButton>
+          ))
+        ) : (
+          <Typography variant="caption" sx={{ px: 2, color: "#667085" }}>
+            {isAuthenticated() ? "No history yet" : "Login to see history"}
+          </Typography>
+        )}
       </List>
     </Box>
   );
 }
 
 export default Sidebar;
+

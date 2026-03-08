@@ -13,7 +13,16 @@ import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import DownloadIcon from "@mui/icons-material/Download";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
-const PaperCard = () => {
+const PaperCard = ({ paper, onSave }) => {
+  const { 
+    title = "Untitled Paper", 
+    authors = "Unknown Authors", 
+    publish_date = "N/A", 
+    abstract = "No abstract available.",
+    category = "Research",
+    pdf_url
+  } = paper || {};
+
   return (
     <Card
       sx={{
@@ -28,7 +37,7 @@ const PaperCard = () => {
       <CardContent sx={{ pb: 1 }}>
         {/* Category Chip */}
         <Chip 
-          label="Computer Science" 
+          label={category} 
           size="small" 
           sx={{ 
             mb: 1.5, 
@@ -50,8 +59,9 @@ const PaperCard = () => {
             cursor: "pointer",
             "&:hover": { color: "#101828cc" }
           }}
+          onClick={() => pdf_url && window.open(pdf_url, '_blank')}
         >
-          Advancements in Transformer Models for Large Language Tasks
+          {title}
         </Typography>
 
         {/* Authors and Metadata */}
@@ -63,7 +73,7 @@ const PaperCard = () => {
               fontWeight: 500,
             }}
           >
-            J. Smith, A. Johnson, et al.
+            {authors}
           </Typography>
           <Box sx={{ width: 4, height: 4, bgcolor: "#D0D5DD", borderRadius: "50%" }} />
           <Typography
@@ -73,7 +83,7 @@ const PaperCard = () => {
               fontWeight: 500,
             }}
           >
-            Published: Mar 2024
+            Published: {publish_date}
           </Typography>
         </Box>
 
@@ -90,9 +100,7 @@ const PaperCard = () => {
             mb: 1
           }}
         >
-          This paper explores the latest transformer architectures and their efficiency in 
-          handling long-context windows for multi-modal tasks. We present a novel attention 
-          mechanism that reduces computational complexity while maintaining accuracy...
+          {abstract}
         </Typography>
 
       </CardContent>
@@ -113,6 +121,7 @@ const PaperCard = () => {
             variant="text"
             startIcon={<BookmarkBorderIcon />}
             sx={{ color: "#475467" }}
+            onClick={() => onSave && onSave(paper)}
           >
             Save
           </Button>
@@ -121,6 +130,7 @@ const PaperCard = () => {
             variant="text"
             startIcon={<DownloadIcon />}
             sx={{ color: "#475467" }}
+            onClick={() => pdf_url && window.open(pdf_url, '_blank')}
           >
             PDF
           </Button>
@@ -135,6 +145,7 @@ const PaperCard = () => {
             color: "#344054",
             "&:hover": { borderColor: "#101828", bgcolor: "transparent" }
           }}
+          onClick={() => pdf_url && window.open(pdf_url, '_blank')}
         >
           View Full Paper
         </Button>

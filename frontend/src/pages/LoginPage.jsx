@@ -1,10 +1,30 @@
-import React from 'react';
-import { Box, Typography, TextField, Button, Paper, Container, Link as MuiLink, Divider, Stack } from '@mui/material';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Box, Typography, TextField, Button, Paper, Container, Link as MuiLink, Divider, Stack, CircularProgress } from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom';
 import GoogleIcon from '@mui/icons-material/Google';
 import Navbar from "../components/Navbar";
+import { login } from "../api/auth";
 
 const LoginPage = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    if (!email || !password) return;
+    setLoading(true);
+    try {
+      await login(email, password);
+      navigate('/');
+    } catch (error) {
+      console.error("Login failed:", error);
+      alert("Login failed. Please check your credentials.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#F8FAFF" }}>
       <Navbar />
@@ -25,8 +45,21 @@ const LoginPage = () => {
 
             <Divider sx={{ my: 1 }}><Typography variant="caption" color="text.secondary">OR</Typography></Divider>
 
-            <TextField fullWidth label="Email address" placeholder="name@company.com" />
-            <TextField fullWidth label="Password" type="password" />
+            <TextField 
+              fullWidth 
+              label="Email address" 
+              placeholder="name@company.com" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <TextField 
+              fullWidth 
+              label="Password" 
+              type="password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+            />
 
             <Box sx={{ textAlign: "right" }}>
               <MuiLink component={Link} to="#" sx={{ fontSize: "0.85rem", fontWeight: 600, color: "#101828", textDecoration: "none" }}>
@@ -37,9 +70,11 @@ const LoginPage = () => {
             <Button
               fullWidth
               variant="contained"
+              onClick={handleLogin}
+              disabled={loading}
               sx={{ py: 1.5, bgcolor: "#101828", "&:hover": { bgcolor: "#1D2939" }, fontWeight: 700 }}
             >
-              Sign In
+              {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
             </Button>
           </Stack>
 

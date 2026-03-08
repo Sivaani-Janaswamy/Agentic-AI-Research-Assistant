@@ -5,26 +5,35 @@ import SearchIcon from '@mui/icons-material/Search';
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import { detectGaps } from "../api/analysis";
 
 const ResearchGapDetector = () => {
   const [topic, setTopic] = useState('');
   const [gaps, setGaps] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const handleDetectGaps = () => {
+  const handleDetectGaps = async () => {
     if (!topic) return;
     setLoading(true);
     setGaps([]);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const data = await detectGaps(topic);
+      setGaps(data.gaps || []);
+    } catch (error) {
+      console.error("Error detecting gaps:", error);
+      alert("Failed to analyze research landscape. Please try again.");
+    } finally {
       setLoading(false);
-      setGaps([
-        'Lack of longitudinal studies in remote education impact.',
-        'Insufficient data on the long-term effects of AI in primary care.',
-        'Limited research on cross-platform accessibility for neurodivergent users.',
-        'Unexplored potential of blockchain in small-scale agricultural logistics.'
-      ]);
-    }, 2500);
+    }
+  };
+
+  const getLevelColor = (level) => {
+    switch (level?.toLowerCase()) {
+      case 'high': return '#D92D20';
+      case 'medium': return '#F79009';
+      case 'low': return '#12B76A';
+      default: return '#667085';
+    }
   };
 
   return (
@@ -92,23 +101,31 @@ const ResearchGapDetector = () => {
                   <List sx={{ p: 0 }}>
                     {gaps.map((gap, index) => (
                       <React.Fragment key={index}>
-                        <ListItem sx={{ py: { xs: 2, sm: 3 }, px: { xs: 2, sm: 4 }, "&:hover": { bgcolor: "#F9FAFB" } }}>
-                          <ListItemIcon sx={{ minWidth: { xs: 32, sm: 40 } }}>
-                            <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#7F56D9" }} />
-                          </ListItemIcon>
-                          <ListItemText 
-                            primary={gap} 
-                            primaryTypographyProps={{ fontWeight: 500, color: "#344054", variant: "body2" }}
-                          />
+                        <ListItem sx={{ py: { xs: 2, sm: 3 }, px: { xs: 2, sm: 4 }, "&:hover": { bgcolor: "#F9FAFB" }, display: "block" }}>
+                          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#101828" }}>
+                              {gap.title}
+                            </Typography>
+                            <Chip 
+                              label={`${gap.insight_level} Insight`} 
+                              size="small" 
+                              sx={{ 
+                                bgcolor: `${getLevelColor(gap.insight_level)}15`, 
+                                color: getLevelColor(gap.insight_level),
+                                fontWeight: 700,
+                                fontSize: "0.7rem"
+                              }} 
+                            />
+                          </Box>
+                          <Typography variant="body2" sx={{ color: "#475467", lineHeight: 1.6 }}>
+                            {gap.description}
+                          </Typography>
                         </ListItem>
                         {index < gaps.length - 1 && <Divider />}
                       </React.Fragment>
                     ))}
                   </List>
                 </Card>
-                <Box sx={{ mt: 4, textAlign: "center" }}>
-                  <Button variant="text" sx={{ color: "#667085", fontSize: "0.875rem" }}>Download Gap Report (PDF)</Button>
-                </Box>
               </Box>
             )}
           </Container>
