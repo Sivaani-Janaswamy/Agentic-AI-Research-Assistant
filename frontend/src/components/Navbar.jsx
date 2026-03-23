@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -9,17 +9,56 @@ import {
   Drawer,
   List,
   ListItem,
-  ListItemText
+  ListItemText,
+  Avatar,
+  Menu,
+  MenuItem,
+  Divider,
+  ListItemIcon
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import LogoutIcon from "@mui/icons-material/Logout";
+import HistoryIcon from "@mui/icons-material/History";
 import { Link, useLocation } from "react-router-dom";
+import { isAuthenticated, logout, getStoredUser, fetchMe } from "../api/auth";
+import { getHistory } from "../api/papers";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [user, setUser] = useState(getStoredUser());
+  const [history, setHistory] = useState([]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      if (isAuthenticated()) {
+        if (!user) {
+          const me = await fetchMe().catch(() => null);
+          if (me) setUser(me);
+        }
+        const sessions = await getHistory().catch(() => []);
+        setHistory(Array.isArray(sessions) ? sessions : []);
+      }
+    };
+    init();
+  }, []);
+
+  const handleProfileMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => setAnchorEl(null);
+
+  const handleLogout = () => {
+    logout();
+    setUser(null);
+    setHistory([]);
+    handleCloseMenu();
   };
 
   const navItems = [
@@ -142,24 +181,68 @@ const Navbar = () => {
           </Box>
 
           {/* Desktop Login Button */}
-          <Button
-            component={Link}
-            to="/login"
-            variant="contained"
-            sx={{
-              display: { xs: "none", lg: "inline-flex" },
-              background: "#000",
-              borderRadius: "30px",
-              px: 3,
-              color: "white",
-              textTransform: "none",
-              "&:hover": {
-                background: "#222"
-              }
-            }}
-          >
-            Sign Up / Login
-          </Button>
+          {isAuthenticated() && user ? (
+            <>
+              <IconButton onClick={handleProfileMenu} sx={{ ml: 1 }}>
+                <Avatar sx={{ bgcolor: "#000" }}>
+                  {user.full_name ? user.full_name[0].toUpperCase() : "U"}
+                </Avatar>
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleCloseMenu}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              >
+                <MenuItem disabled>
+                  Signed in as {user.full_name || user.email}
+                </MenuItem>
+                <Divider />
+                <MenuItem disabled>
+                  <ListItemIcon>
+                    <HistoryIcon fontSize="small" />
+                  </ListItemIcon>
+                  Recent Sessions
+                </MenuItem>
+                {history.length === 0 && (
+                  <MenuItem disabled sx={{ pl: 4 }}>
+                    No history yet
+                  </MenuItem>
+                )}
+                {history.slice(0, 5).map((session) => (
+                  <MenuItem key={session.id || session.session_name} sx={{ pl: 4 }} disabled>
+                    {session.session_name || session}
+                  </MenuItem>
+                ))}
+                <Divider />
+                <MenuItem onClick={handleLogout}>
+                  <ListItemIcon>
+                    <LogoutIcon fontSize="small" />
+                  </ListItemIcon>
+                  Logout
+                </MenuItem>
+              </Menu>
+            </>
+          ) : (
+            <Button
+              component={Link}
+              to="/login"
+              variant="contained"
+              sx={{
+                display: { xs: "none", lg: "inline-flex" },
+                background: "#000",
+                borderRadius: "30px",
+                px: 3,
+                color: "white",
+                textTransform: "none",
+                "&:hover": {
+                  background: "#222"
+                }
+              }}
+            >
+              Sign Up / Login
+            </Button>
+          )}
         </Toolbar>
       </AppBar>
 

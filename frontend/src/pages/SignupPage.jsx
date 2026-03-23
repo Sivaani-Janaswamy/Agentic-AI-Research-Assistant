@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, TextField, Button, Paper, Container, Link as MuiLink, Divider, Stack, CircularProgress } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import GoogleIcon from '@mui/icons-material/Google';
 import Navbar from "../components/Navbar";
-import { signup } from "../api/auth";
+import { signup, googleAuth } from "../api/auth";
+
+const loadGoogleScript = () => new Promise((resolve, reject) => {
+  if (document.getElementById('google-identity')) return resolve();
+  const script = document.createElement('script');
+  script.src = 'https://accounts.google.com/gsi/client';
+  script.id = 'google-identity';
+  script.async = true;
+  script.onload = resolve;
+  script.onerror = reject;
+  document.body.appendChild(script);
+});
 
 const SignupPage = () => {
   const [fullName, setFullName] = useState('');
@@ -11,6 +22,43 @@ const SignupPage = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const googleBtnRef = useRef(null);
+
+  useEffect(() => {
+    const initGoogle = async () => {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (!clientId) return;
+      try {
+        await loadGoogleScript();
+        /* global google */
+        google.accounts.id.initialize({
+          client_id: clientId,
+          callback: async (response) => {
+            setLoading(true);
+            try {
+              await googleAuth(response.credential);
+              navigate('/');
+            } catch (err) {
+              console.error("Google auth failed", err);
+              alert("Google sign-in failed. Check origin/client ID settings.");
+            } finally {
+              setLoading(false);
+            }
+          }
+        });
+        if (googleBtnRef.current) {
+          google.accounts.id.renderButton(googleBtnRef.current, {
+            theme: "outline",
+            size: "large",
+            width: 320,
+          });
+        }
+      } catch (err) {
+        console.error("Google script load failed", err);
+      }
+    };
+    initGoogle();
+  }, [navigate]);
 
   const handleSignup = async () => {
     if (!email || !password || !fullName) return;
@@ -40,8 +88,9 @@ const SignupPage = () => {
               variant="outlined"
               startIcon={<GoogleIcon />}
               sx={{ py: 1.2, borderColor: "#D0D5DD", color: "#344054", fontWeight: 600 }}
+              disabled={!import.meta.env.VITE_GOOGLE_CLIENT_ID}
             >
-              Sign up with Google
+              <span ref={googleBtnRef} style={{ width: "100%" }}>Sign up with Google</span>
             </Button>
 
             <Divider sx={{ my: 1 }}><Typography variant="caption" color="text.secondary">OR</Typography></Divider>

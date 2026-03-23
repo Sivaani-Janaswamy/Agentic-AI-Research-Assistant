@@ -10,10 +10,12 @@ const RelatedPapers = () => {
   const [topic, setTopic] = useState('');
   const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
 
   const handleFindPapers = async () => {
     if (!topic) return;
     setLoading(true);
+    setSearched(true);
     try {
       const data = await getRelatedPapers(topic);
       setPapers(data.related_papers || []);
@@ -84,6 +86,14 @@ const RelatedPapers = () => {
               </Button>
             </Card>
 
+            {searched && !loading && papers.length === 0 && (
+              <Paper sx={{ p: 4, textAlign: "center", bgcolor: "#fff", border: "1px dashed #D0D5DD" }}>
+                <Typography variant="body1" color="text.secondary">
+                  No related papers found for "{topic}". Try a different topic or keyword.
+                </Typography>
+              </Paper>
+            )}
+
             {papers.length > 0 && (
               <Box>
                 <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>Recommended Papers</Typography>
@@ -107,7 +117,7 @@ const RelatedPapers = () => {
                               color: "#101828",
                               variant: "body1"
                             }}
-                            secondary={paper.authors || "Research Paper"}
+                            secondary={paper.authors ? (Array.isArray(paper.authors) ? paper.authors.join(", ") : paper.authors) : "Research Paper"}
                           />
                         </ListItem>
                         {index < papers.length - 1 && <Divider />}

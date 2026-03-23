@@ -43,7 +43,7 @@ const PaperComparison = () => {
   };
 
   const transformData = (papers = []) => {
-    if (!papers.length) return [];
+    if (!Array.isArray(papers) || !papers.length) return [];
 
     const metrics = [
       { key: 'accuracy', label: 'Accuracy / Performance' },
@@ -55,7 +55,7 @@ const PaperComparison = () => {
     return metrics.map(m => ({
       metric: m.label,
       ...papers.reduce((acc, p, idx) => {
-        acc[`paper${idx + 1}`] = p[m.key] || 'N/A';
+        acc[`paper${idx + 1}`] = p?.[m.key] || 'N/A';
         return acc;
       }, {})
     }));
@@ -71,9 +71,12 @@ const PaperComparison = () => {
     setComparing(true);
     try {
       const data = await comparePapers(selectedIds);
-      const papersArray = data?.papers || [];
-      if (!papersArray.length) {
-        alert("No papers returned from comparison API.");
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+      const papersArray = data?.papers;
+      if (!Array.isArray(papersArray) || !papersArray.length) {
+        alert("No comparison data returned from AI.");
         setComparing(false);
         return;
       }
@@ -81,7 +84,7 @@ const PaperComparison = () => {
       setResults({ papers: papersArray, matrix: transformed });
     } catch (error) {
       console.error("Comparison error:", error);
-      alert("Failed to generate comparison matrix.");
+      alert(error.message || "Failed to generate comparison matrix.");
     } finally {
       setComparing(false);
     }

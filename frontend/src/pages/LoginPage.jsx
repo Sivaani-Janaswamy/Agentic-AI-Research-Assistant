@@ -1,16 +1,38 @@
-import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Paper, Container, Link as MuiLink, Divider, Stack, CircularProgress } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import {
+  Box, Typography, TextField, Button, Paper, Container,
+  Link as MuiLink, Divider, Stack, CircularProgress, Dialog,
+  DialogTitle, DialogContent, DialogActions, Alert
+} from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import GoogleIcon from '@mui/icons-material/Google';
 import Navbar from "../components/Navbar";
-import { login } from "../api/auth";
+import { login, googleAuth, forgotPassword, resetPassword } from "../api/auth";
+
+const loadGoogleScript = () =>
+  new Promise((resolve, reject) => {
+    if (document.getElementById('google-identity')) return resolve();
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.id = 'google-identity';
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.body.appendChild(script);
+  });
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetToken, setResetToken] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
+  const [resetError, setResetError] = useState('');
   const navigate = useNavigate();
 
+  // ✅ Normal Login
   const handleLogin = async () => {
     if (!email || !password) return;
     setLoading(true);
@@ -25,44 +47,135 @@ const LoginPage = () => {
     }
   };
 
+  // ✅ Google Auth Setup
+  useEffect(() => {
+    const initGoogle = async () => {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (!clientId) return;
+      try {
+        await loadGoogleScript();
+
+        /* global google */
+        google.accounts.id.initialize({
+          client_id: clientId,
+          callback: async (response) => {
+            try {
+              setLoading(true);
+              await googleAuth(response.credential);
+              navigate('/');
+            } catch (err) {
+              console.error("Google auth failed", err);
+              alert("Google sign-in failed.");
+            } finally {
+              setLoading(false);
+            }
+          }
+        });
+
+        // ✅ Render Google Button
+        google.accounts.id.renderButton(
+          document.getElementById("googleSignInDiv"),
+          {
+            theme: "outline",
+            size: "large",
+            width: 320,
+          }
+        );
+
+      } catch (err) {
+        console.error("Google script load failed:", err);
+      }
+    };
+
+    initGoogle();
+  }, [navigate]);
+
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#F8FAFF" }}>
+    <Box sx={{
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      background: "#F8FAFF"
+    }}>
       <Navbar />
-      <Container maxWidth="sm" sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", py: { xs: 4, sm: 8 }, px: { xs: 2, sm: 3 } }}>
-        <Paper sx={{ p: { xs: 3, sm: 5 }, width: "100%", textAlign: "center", borderRadius: "16px", boxShadow: "0px 8px 24px rgba(0,0,0,0.05)" }}>
-          <Typography variant="h4" sx={{ mb: 1, fontWeight: 700, fontSize: { xs: "1.75rem", sm: "2.125rem" } }}>Welcome Back</Typography>
-          <Typography variant="body2" sx={{ mb: 4, color: "#667085" }}>Log in to your AI Researcher account</Typography>
-          
+
+      <Container maxWidth="sm" sx={{
+        flex: 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        py: { xs: 4, sm: 8 },
+        px: { xs: 2, sm: 3 }
+      }}>
+        <Paper sx={{
+          p: { xs: 3, sm: 5 },
+          width: "100%",
+          textAlign: "center",
+          borderRadius: "16px",
+          boxShadow: "0px 8px 24px rgba(0,0,0,0.05)"
+        }}>
+          <Typography variant="h4" sx={{
+            mb: 1,
+            fontWeight: 700,
+            fontSize: { xs: "1.75rem", sm: "2.125rem" }
+          }}>
+            Welcome Back
+          </Typography>
+
+          <Typography variant="body2" sx={{ mb: 4, color: "#667085" }}>
+            Log in to your AI Researcher account
+          </Typography>
+
           <Stack spacing={2.5}>
-            <Button
+
+            {/* ✅ Google Button */}
+            <div id="googleSignInDiv"></div>
+
+            <Divider sx={{ my: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                OR
+              </Typography>
+            </Divider>
+
+            <TextField
               fullWidth
-              variant="outlined"
-              startIcon={<GoogleIcon />}
-              sx={{ py: 1.2, borderColor: "#D0D5DD", color: "#344054", fontWeight: 600 }}
-            >
-              Sign in with Google
-            </Button>
-
-            <Divider sx={{ my: 1 }}><Typography variant="caption" color="text.secondary">OR</Typography></Divider>
-
-            <TextField 
-              fullWidth 
-              label="Email address" 
-              placeholder="name@company.com" 
+              label="Email address"
+              placeholder="name@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <TextField 
-              fullWidth 
-              label="Password" 
-              type="password" 
+
+            <TextField
+              fullWidth
+              label="Password"
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
             />
 
             <Box sx={{ textAlign: "right" }}>
-              <MuiLink component={Link} to="#" sx={{ fontSize: "0.85rem", fontWeight: 600, color: "#101828", textDecoration: "none" }}>
+              <MuiLink
+                component="button"
+                onClick={() => {
+                  setResetOpen(true);
+                  setResetEmail(email);
+                  setResetMessage('');
+                  setResetError('');
+                  setResetToken('');
+                  setResetNewPassword('');
+                }}
+                sx={{
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  color: "#101828",
+                  textDecoration: "none",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  p: 0
+                }}
+              >
                 Forgot password?
               </MuiLink>
             </Box>
@@ -72,20 +185,99 @@ const LoginPage = () => {
               variant="contained"
               onClick={handleLogin}
               disabled={loading}
-              sx={{ py: 1.5, bgcolor: "#101828", "&:hover": { bgcolor: "#1D2939" }, fontWeight: 700 }}
+              sx={{
+                py: 1.5,
+                bgcolor: "#101828",
+                "&:hover": { bgcolor: "#1D2939" },
+                fontWeight: 700
+              }}
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+              {loading
+                ? <CircularProgress size={24} color="inherit" />
+                : 'Sign In'}
             </Button>
           </Stack>
 
           <Typography variant="body2" sx={{ mt: 4, color: "#667085" }}>
             Don't have an account?{' '}
-            <MuiLink component={Link} to="/signup" sx={{ fontWeight: 600, color: "#101828", textDecoration: "none" }}>
+            <MuiLink
+              component={Link}
+              to="/signup"
+              sx={{
+                fontWeight: 600,
+                color: "#101828",
+                textDecoration: "none"
+              }}
+            >
               Sign up
             </MuiLink>
           </Typography>
         </Paper>
       </Container>
+
+      <Dialog open={resetOpen} onClose={() => setResetOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle>Password reset</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+          {resetMessage ? <Alert severity="success">{resetMessage}</Alert> : null}
+          {resetError ? <Alert severity="error">{resetError}</Alert> : null}
+          <TextField
+            label="Email address"
+            fullWidth
+            value={resetEmail}
+            onChange={(e) => setResetEmail(e.target.value)}
+          />
+          <Button
+            variant="outlined"
+            onClick={async () => {
+              setResetError('');
+              setResetMessage('');
+              try {
+                await forgotPassword(resetEmail);
+                setResetMessage("If that email exists, a reset code was sent. Check your inbox and paste the code here.");
+                setTimeout(() => setResetMessage(''), 6000);
+              } catch (err) {
+                console.error(err);
+                setResetError("Could not create reset code. Check the email and try again.");
+              }
+            }}
+          >
+            Send reset code
+          </Button>
+          <TextField
+            label="Reset code"
+            fullWidth
+            value={resetToken}
+            onChange={(e) => setResetToken(e.target.value)}
+          />
+          <TextField
+            label="New password"
+            fullWidth
+            type="password"
+            value={resetNewPassword}
+            onChange={(e) => setResetNewPassword(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setResetOpen(false)}>Close</Button>
+          <Button
+            variant="contained"
+            onClick={async () => {
+              setResetError('');
+              setResetMessage('');
+              try {
+                await resetPassword(resetToken, resetNewPassword);
+                setResetMessage("Password updated. You can now sign in.");
+              } catch (err) {
+                console.error(err);
+                setResetError("Reset failed. Check the code and try again.");
+              }
+            }}
+            disabled={!resetToken || !resetNewPassword}
+          >
+            Reset password
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
