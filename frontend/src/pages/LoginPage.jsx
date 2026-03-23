@@ -30,6 +30,7 @@ const LoginPage = () => {
   const [resetNewPassword, setResetNewPassword] = useState('');
   const [resetMessage, setResetMessage] = useState('');
   const [resetError, setResetError] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
   const navigate = useNavigate();
 
   // ✅ Normal Login
@@ -61,10 +62,11 @@ const LoginPage = () => {
           callback: async (response) => {
             try {
               setLoading(true);
+              console.debug('[google] credential received');
               await googleAuth(response.credential);
               navigate('/');
             } catch (err) {
-              console.error("Google auth failed", err);
+              console.error("[google] auth failed", err);
               alert("Google sign-in failed.");
             } finally {
               setLoading(false);
@@ -83,7 +85,7 @@ const LoginPage = () => {
         );
 
       } catch (err) {
-        console.error("Google script load failed:", err);
+        console.error("[google] script load failed:", err);
       }
     };
 
@@ -231,17 +233,23 @@ const LoginPage = () => {
             onClick={async () => {
               setResetError('');
               setResetMessage('');
+              setResetLoading(true);
               try {
+                console.debug('[reset] sending code', resetEmail);
                 await forgotPassword(resetEmail);
                 setResetMessage("If that email exists, a reset code was sent. Check your inbox and paste the code here.");
                 setTimeout(() => setResetMessage(''), 6000);
               } catch (err) {
-                console.error(err);
-                setResetError("Could not create reset code. Check the email and try again.");
+                console.error("[reset] send failed", err);
+                const detail = err?.response?.data?.detail || err?.message || "Unknown error";
+                setResetError(`Could not create reset code: ${detail}`);
+              } finally {
+                setResetLoading(false);
               }
             }}
+            disabled={resetLoading || !resetEmail}
           >
-            Send reset code
+            {resetLoading ? 'Sending…' : 'Send reset code'}
           </Button>
           <TextField
             label="Reset code"
@@ -264,17 +272,22 @@ const LoginPage = () => {
             onClick={async () => {
               setResetError('');
               setResetMessage('');
+              setResetLoading(true);
               try {
+                console.debug('[reset] submitting new password');
                 await resetPassword(resetToken, resetNewPassword);
                 setResetMessage("Password updated. You can now sign in.");
               } catch (err) {
-                console.error(err);
-                setResetError("Reset failed. Check the code and try again.");
+                console.error("[reset] update failed", err);
+                const detail = err?.response?.data?.detail || err?.message || "Unknown error";
+                setResetError(`Reset failed: ${detail}`);
+              } finally {
+                setResetLoading(false);
               }
             }}
             disabled={!resetToken || !resetNewPassword}
           >
-            Reset password
+            {resetLoading ? 'Updating…' : 'Reset password'}
           </Button>
         </DialogActions>
       </Dialog>
