@@ -7,11 +7,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
+import hashlib
+import secrets
+import smtplib
+import ssl
+import os
 import fitz  # PyMuPDF
 import io
 import logging
 import datetime
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 
 from agents.retriever_agent import RetrieverAgent
 from agents.summarizer_agent import SummarizerAgent
@@ -77,7 +83,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # ===== CORS CONFIG =====
 origins = [
     "http://localhost:5173",
-    "https://agentic-ai-research-assistant-two.vercel.app/",
+    "https://agentic-ai-research-assistant-two.vercel.app",
+    "https://agentic-ai-research-assistant.onrender.com",
 ]
 
 app.add_middleware(
@@ -96,6 +103,14 @@ gap_agent = GapAgent()
 comparison_agent = ComparisonAgent()
 vector_store = VectorStore()
 rag_agent = RAGAgent()
+
+# ===== EMAIL CONFIG =====
+SMTP_HOST = os.getenv("SMTP_HOST")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER")
+SMTP_PASS = os.getenv("SMTP_PASS")
+SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER or "")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 # ===== AUTH DEPENDENCIES =====
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
@@ -145,6 +160,13 @@ class FavoriteRequest(BaseModel):
     title: Optional[str] = None
     pdf_url: Optional[str] = None
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
 # ===== HELPER FUNCTIONS =====
 def extract_text_from_pdf(file_bytes: bytes) -> str:
     try:
@@ -156,6 +178,24 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error parsing PDF: {str(e)}")
 
+def send_reset_email(email: str, token: str):
+    if not (SMTP_HOST and SMTP_USER and SMTP_PASS and SMTP_FROM):
+        logger.warning("SMTP not fully configured; skipping reset email send")
+        return True
+    try:
+        context = ssl.create_default_context()
+        reset_link = f"{FRONTEND_URL}/reset-password?code={token}"
+        body = f"Use this code to reset your password:\n\n{token}\n\nOr click: {reset_link}\n\nThis code expires in 30 minutes."
+        msg = f"Subject: Password Reset\nFrom: {SMTP_FROM}\nTo: {email}\n\n{body}"
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=5) as server:
+            server.starttls(context=context)
+            server.login(SMTP_USER, SMTP_PASS)
+            server.sendmail(SMTP_FROM, [email], msg.encode("utf-8"))
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send reset email: {e}")
+        return False
+
 # ===== AUTH ENDPOINTS =====
 
 @app.post("/api/auth/google")
@@ -163,6 +203,8 @@ def google_auth(request: GoogleAuthRequest, db: Session = Depends(database.get_d
     try:
         # Verify the ID token with Google
         CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+        if not CLIENT_ID:
+            raise HTTPException(status_code=500, detail="GOOGLE_CLIENT_ID not configured on server")
         idinfo = id_token.verify_oauth2_token(request.token, google_requests.Request(), CLIENT_ID)
 
         # Get user info from token
@@ -250,9 +292,88 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     access_token = auth.create_access_token(data={"sub": user.id})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name
+        }
+    }
+
+@app.get("/api/auth/me")
+def get_me(current_user: database.User = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "full_name": current_user.full_name
+    }
+
+@app.post("/api/auth/forgot-password")
+def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(database.get_db)):
+    user = db.query(database.User).filter(database.User.email == request.email).first()
+    if not user:
+        # avoid user enumeration
+        return {"message": "If that email exists, a reset code was created."}
+    # create hashed token stored in DB for persistence
+    raw_token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+    expires_at = datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
+
+    try:
+        # Ensure table exists even on older DB files
+        with database.engine.connect() as conn:
+            conn.execute(text(
+                """
+                CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                    id VARCHAR(255) PRIMARY KEY,
+                    user_id VARCHAR(255) NOT NULL,
+                    token_hash VARCHAR(255) NOT NULL,
+                    expires_at DATETIME NOT NULL,
+                    used DATETIME,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            ))
+
+        reset_entry = database.PasswordResetToken(
+            user_id=user.id,
+            token_hash=token_hash,
+            expires_at=expires_at
+        )
+        db.add(reset_entry)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to persist reset token: {e}")
+        raise HTTPException(status_code=500, detail="Unable to create reset token")
+
+    send_reset_email(user.email, raw_token)
+    # do not leak delivery status to prevent enumeration; always respond success
+    return {"message": "If that email exists, a reset code was sent."}
+
+@app.post("/api/auth/reset-password")
+def reset_password(request: ResetPasswordRequest, db: Session = Depends(database.get_db)):
+    token_hash = hashlib.sha256(request.token.encode()).hexdigest()
+    reset_entry = db.query(database.PasswordResetToken).filter(
+        database.PasswordResetToken.token_hash == token_hash
+    ).first()
+    if not reset_entry:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    if reset_entry.used is not None or reset_entry.expires_at < datetime.datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+
+    user = db.query(database.User).filter(database.User.id == reset_entry.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.password_hash = auth.get_password_hash(request.new_password)
+    reset_entry.used = datetime.datetime.utcnow()
+    db.commit()
+    return {"message": "Password updated successfully"}
 
 # ===== USER PERSONALIZATION ENDPOINTS =====
 
@@ -498,14 +619,24 @@ def get_related_papers(q: Optional[str] = None, paper_id: Optional[str] = None):
                 raise HTTPException(status_code=404, detail="Paper not found.")
             
             query = f"Title: {paper['title']}\nAbstract: {paper['summary']}"
+            results = vector_store.search(query, k=5)
+            return {"related_papers": results}
         elif q:
-            query = q
+            # For a topic query, search both local and ArXiv for a better experience
+            local_results = vector_store.search(q, k=3)
+            arxiv_results = retriever.run(q)
+            
+            # Combine and deduplicate by ID if possible
+            combined = local_results
+            existing_ids = {p["id"] for p in local_results}
+            for p in arxiv_results:
+                if p["id"] not in existing_ids:
+                    combined.append(p)
+            
+            return {"related_papers": combined[:10]}
         else:
             raise HTTPException(status_code=400, detail="Query (q) or paper_id must be provided.")
             
-        results = vector_store.search(query, k=5)
-        return {"related_papers": results}
-        
     except Exception as e:
         if isinstance(e, HTTPException): raise e
         return {"error": str(e)}
