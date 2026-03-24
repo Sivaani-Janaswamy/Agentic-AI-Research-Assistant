@@ -23,6 +23,12 @@ const PaperCard = ({ paper, onSave }) => {
     pdf_url
   } = paper || {};
 
+  const sentences = abstract
+    ? abstract.split(/(?<=[.!?])\s+/).filter(Boolean)
+    : [];
+  const bullets = sentences.slice(0, 3);
+  const tldr = sentences[0] || abstract;
+
   return (
     <Card
       sx={{
@@ -102,6 +108,25 @@ const PaperCard = ({ paper, onSave }) => {
         >
           {abstract}
         </Typography>
+
+        {/* Bullet points */}
+        {bullets.length > 0 && (
+          <Box component="ul" sx={{ pl: 3, mt: 1, mb: 1.5, color: "#475467" }}>
+            {bullets.map((line, idx) => (
+              <li key={idx} style={{ marginBottom: 4 }}>{line}</li>
+            ))}
+          </Box>
+        )}
+
+        {/* TL;DR */}
+        {tldr && (
+          <Typography variant="body2" sx={{ color: "#101828", fontWeight: 600, mb: 1 }}>
+            TL;DR:{" "}
+            <Typography component="span" variant="body2" sx={{ color: "#475467", fontWeight: 500 }}>
+              {tldr}
+            </Typography>
+          </Typography>
+        )}
 
       </CardContent>
 

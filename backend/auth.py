@@ -20,7 +20,8 @@ SECRET_KEY = os.getenv(
     "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
 )
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 week
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 2  # 2 days for production
+REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 # ==============================
 # 🔐 GOOGLE CONFIG
@@ -60,6 +61,15 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+def create_refresh_token(data: dict) -> str:
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    if "sub" in to_encode:
+        to_encode["sub"] = str(to_encode["sub"])
+    to_encode.update({"exp": expire, "type": "refresh"})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
 def decode_access_token(token: str):

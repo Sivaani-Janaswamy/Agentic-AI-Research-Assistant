@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Box, Typography, TextField, Button, Container, Card, List, ListItem, ListItemIcon, ListItemText, Divider, LinearProgress, Chip, Stack } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SearchIcon from '@mui/icons-material/Search';
@@ -90,6 +90,44 @@ const ResearchGapDetector = () => {
 
             {gaps.length > 0 && (
               <Box>
+                <Card sx={{ p: { xs: 2, sm: 3 }, mb: 4, background: "#0B1021", color: "#E0E7FF" }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Insight Heatmap</Typography>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                      gap: 1.5
+                    }}
+                  >
+                    {gaps.map((g, idx) => {
+                      const level = g.insight_level?.toLowerCase() || "low";
+                      const color = level === "high" ? "#D92D20" : level === "medium" ? "#F79009" : "#12B76A";
+                      return (
+                        <Box
+                          key={idx}
+                          sx={{
+                            borderRadius: 2,
+                            p: 1.5,
+                            background: `linear-gradient(135deg, ${color}33, ${color}55)`,
+                            border: `1px solid ${color}55`,
+                            minHeight: 120
+                          }}
+                        >
+                          <Typography variant="body2" sx={{ fontWeight: 700, color: "#F8FAFF", mb: 0.5 }}>
+                            {g.title || `Gap ${idx + 1}`}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: "#E2E8F0" }}>
+                            {g.insight_level ? `${g.insight_level} Insight` : "Insight"}
+                          </Typography>
+                          <Typography variant="body2" sx={{ mt: 1, color: "#E0E7FF" }}>
+                            {g.description}
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                </Card>
+
                 <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "flex-start", sm: "center" }} spacing={1} sx={{ mb: 3 }}>
                    <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>
                     Identified Gaps

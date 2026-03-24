@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, ForeignKey, DateTime, Text
+from sqlalchemy import create_engine, Column, String, ForeignKey, DateTime, Text, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 import uuid
@@ -75,6 +75,12 @@ class PasswordResetToken(Base):
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    # Ensure helpful indexes exist for trends/analytics queries
+    with engine.connect() as conn:
+        conn.execute(
+            text("CREATE INDEX IF NOT EXISTS idx_papers_created_category ON papers (created_at, category)")
+        )
+        conn.commit()
 
 def get_db():
     db = SessionLocal()

@@ -44,3 +44,10 @@ build/
 .venv/
 venv/
 backend/venv/
+
+# Local model/cache artifacts
+static/models/
+chroma_db/
+research_agent.db
+tmp/
+.dist/

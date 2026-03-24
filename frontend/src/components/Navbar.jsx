@@ -16,6 +16,8 @@ import {
   Divider,
   ListItemIcon
 } from "@mui/material";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/Logout";
 import HistoryIcon from "@mui/icons-material/History";
@@ -29,6 +31,7 @@ const Navbar = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [user, setUser] = useState(getStoredUser());
   const [history, setHistory] = useState([]);
+  const [toast, setToast] = useState({ open: false, severity: "info", message: "" });
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -43,6 +46,7 @@ const Navbar = () => {
         }
         const sessions = await getHistory().catch(() => []);
         setHistory(Array.isArray(sessions) ? sessions : []);
+        setToast({ open: true, severity: "success", message: "Logged in" });
       }
     };
     init();
@@ -58,6 +62,7 @@ const Navbar = () => {
     logout();
     setUser(null);
     setHistory([]);
+    setToast({ open: true, severity: "info", message: "Logged out" });
     handleCloseMenu();
   };
 
@@ -259,6 +264,21 @@ const Navbar = () => {
       >
         {drawer}
       </Drawer>
+
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={3000}
+        onClose={() => setToast({ ...toast, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setToast({ ...toast, open: false })}
+          severity={toast.severity}
+          sx={{ width: '100%' }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

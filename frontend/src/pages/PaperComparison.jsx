@@ -16,6 +16,7 @@ const PaperComparison = () => {
   const [favorites, setFavorites] = useState([]);
   const [selected, setSelected] = useState({});
   const [loadingFavs, setLoadingFavs] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     fetchFavs();
@@ -64,7 +65,7 @@ const PaperComparison = () => {
   const handleCompare = async () => {
     const selectedIds = Object.keys(selected).filter(id => selected[id]);
     if (selectedIds.length < 2 || selectedIds.length > 3) {
-      alert("Please select 2-3 papers to compare.");
+      setErrorMsg("Please select 2-3 papers to compare.");
       return;
     }
 
@@ -84,7 +85,7 @@ const PaperComparison = () => {
       setResults({ papers: papersArray, matrix: transformed });
     } catch (error) {
       console.error("Comparison error:", error);
-      alert(error.message || "Failed to generate comparison matrix.");
+      setErrorMsg(error.response?.data?.detail || error.message || "Failed to generate comparison matrix.");
     } finally {
       setComparing(false);
     }
@@ -117,6 +118,15 @@ const PaperComparison = () => {
             </Typography>
 
             <Card sx={{ p: { xs: 3, sm: 4 }, mb: 6 }}>
+              {errorMsg && (
+                <Alert
+                  severity="error"
+                  onClose={() => setErrorMsg("")}
+                  sx={{ mb: 2 }}
+                >
+                  {errorMsg}
+                </Alert>
+              )}
               <Typography variant="h6" sx={{ mb: 2, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>
                 {loadingFavs ? "Loading your library..." : `You have ${favorites.length} papers in your library.`}
               </Typography>
@@ -132,7 +142,11 @@ const PaperComparison = () => {
               <Button
                 variant="contained"
                 onClick={handleCompare}
-                disabled={comparing || loadingFavs}
+                disabled={
+                  comparing ||
+                  loadingFavs ||
+                  Object.values(selected).filter(Boolean).length < 2
+                }
                 sx={{
                   bgcolor: "#101828",
                   "&:hover": { bgcolor: "#1D2939" },

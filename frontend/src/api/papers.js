@@ -5,6 +5,26 @@ export const fetchRecentPapers = async (limit = 10) => {
   return response.data;
 };
 
+export const getTrends = async () => {
+  const response = await apiClient.get('trends');
+  return response.data;
+};
+
+export const getDomainTrends = async () => {
+  const response = await apiClient.get('trends/domains');
+  return response.data;
+};
+
+export const getDomainTrendsOnline = async () => {
+  const response = await apiClient.get('trends/domains/online');
+  return response.data;
+};
+
+export const getGlobalTrends = async () => {
+  const response = await apiClient.get('trends/global');
+  return response.data;
+};
+
 export const searchPapers = async (query, limit = 10) => {
   const response = await apiClient.get('papers/search', { params: { q: query, limit } });
   return response.data;

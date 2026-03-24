@@ -1,9 +1,12 @@
 import apiClient from './apiClient';
 
-const setSession = ({ access_token, user }) => {
+const setSession = ({ access_token, refresh_token, user }) => {
   if (access_token) {
     console.debug('[auth] storing access token');
     localStorage.setItem('token', access_token);
+  }
+  if (refresh_token) {
+    localStorage.setItem('refresh_token', refresh_token);
   }
   if (user) {
     console.debug('[auth] storing user payload', user);

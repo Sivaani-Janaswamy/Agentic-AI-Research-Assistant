@@ -1,19 +1,44 @@
 import React, { useState, useEffect } from "react";
-import { Box, Container, Typography, CircularProgress } from "@mui/material";
+import { Box, Container, Typography, CircularProgress, Card, Chip } from "@mui/material";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import PaperCard from "../components/PaperCard";
 import Searchbar from "../components/Searchbar";
 import { fetchRecentPapers, searchPapers, addFavorite } from "../api/papers";
+import { getGlobalTrends } from "../api/papers";
+
+const palette = [
+  { border: "#7F56D9", fill: "rgba(127,86,217,0.15)" },
+  { border: "#12B76A", fill: "rgba(18,183,106,0.15)" },
+  { border: "#F79009", fill: "rgba(247,144,9,0.18)" },
+  { border: "#EF4444", fill: "rgba(239,68,68,0.18)" },
+  { border: "#06AED4", fill: "rgba(6,174,212,0.15)" },
+  { border: "#667085", fill: "rgba(102,112,133,0.15)" },
+];
+
+const labelMap = {
+  "cs.AI": "Artificial Intelligence",
+  "cs.LG": "Machine Learning",
+  "stat.ML": "Statistical ML",
+  "cs.CV": "Computer Vision",
+  "cs.CL": "Computational Linguistics",
+  "cs.IR": "Information Retrieval",
+  "cs.RO": "Robotics",
+  "cs.DS": "Data Structures & Algorithms",
+};
 
 function Home() {
   const [papers, setPapers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [trendTop, setTrendTop] = useState([]);
+  const [trendSource, setTrendSource] = useState("");
+  const [trendError, setTrendError] = useState("");
 
   useEffect(() => {
     loadInitialPapers();
+    loadTrends();
   }, []);
 
   const loadInitialPapers = async () => {
@@ -27,6 +52,44 @@ function Home() {
       setLoading(false);
     }
   };
+
+  const loadTrends = async () => {
+    const fallback = [
+      { label: "cs.AI", percent: 26.0, rank: 1, borderColor: palette[0].border, backgroundColor: palette[0].fill },
+      { label: "cs.LG", percent: 24.5, rank: 2, borderColor: palette[1].border, backgroundColor: palette[1].fill },
+      { label: "stat.ML", percent: 18.5, rank: 3, borderColor: palette[2].border, backgroundColor: palette[2].fill },
+      { label: "cs.CV", percent: 17.0, rank: 4, borderColor: palette[3].border, backgroundColor: palette[3].fill },
+      { label: "cs.CL", percent: 14.0, rank: 5, borderColor: palette[4].border, backgroundColor: palette[4].fill },
+    ];
+    try {
+      const trend = await getGlobalTrends();
+      if (trend?.domains?.length) {
+        const paletteSized = trend.domains.map((d, idx) => ({
+          ...d,
+          borderColor: palette[idx % palette.length].border,
+          backgroundColor: palette[idx % palette.length].fill,
+        }));
+        setTrendTop(paletteSized);
+        setTrendSource(trend.source || "unknown");
+      } else {
+        setTrendTop(fallback);
+        setTrendSource("fallback");
+        setTrendError("");
+      }
+    } catch (err) {
+      console.error("Error fetching trends:", err);
+      setTrendTop(fallback);
+      setTrendSource("fallback");
+      setTrendError("");
+    }
+  };
+
+  const totalSum = trendTop.reduce((a, b) => a + (Number.isFinite(b.percent) ? b.percent : 0), 0) || 0;
+  const percentTop = trendTop.map((t) => ({
+    ...t,
+    display: labelMap[t.label] || t.label,
+    percent: Number.isFinite(t.percent) ? t.percent : 0,
+  }));
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -92,6 +155,81 @@ function Home() {
             <Typography variant="h5" sx={{ mb: 3, fontWeight: 700, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}>
               {searchQuery ? `Results for "${searchQuery}"` : "Recent Research Papers"}
             </Typography>
+
+            {true && (
+              <Card sx={{ p: { xs: 2, sm: 3 }, mb: 4, boxShadow: "0 10px 40px -18px rgba(16,24,40,0.35)" }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                  Global Trending Research Domains (Crossref pulse)
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Live share of recent Crossref-indexed AI/ML papers (past 7 days).
+                </Typography>
+                {trendSource && (
+                  <Chip
+                    size="small"
+                    label={
+                      trendSource === "fallback"
+                        ? "Showing cached snapshot (offline fallback)"
+                        : `Source: ${trendSource}`
+                    }
+                    sx={{
+                      mb: 2,
+                      bgcolor: trendSource === "fallback" ? "#FEF3C7" : "#EEF2FF",
+                      color: trendSource === "fallback" ? "#92400E" : "#312E81",
+                      fontWeight: 600,
+                    }}
+                  />
+                )}
+                {percentTop.length === 0 ? (
+                  <Typography variant="body2" sx={{ color: "#667085" }}>
+                    No trend data yet. Add or fetch papers to see top domains.
+                  </Typography>
+                ) : (
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                    {percentTop.map((t, idx) => (
+                      <Box key={t.label} sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <Typography variant="body2" sx={{ fontWeight: 700, color: "#101828" }}>
+                            {idx + 1}. {t.display}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: "#475467", fontWeight: 600 }}>
+                            {t.percent}%
+                          </Typography>
+                        </Box>
+                        <Box
+                          sx={{
+                            position: "relative",
+                            width: "100%",
+                            height: 10,
+                            borderRadius: 999,
+                            backgroundColor: "#F2F4F7",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              left: 0,
+                              top: 0,
+                              bottom: 0,
+                              width: `${Math.min(Math.max(t.percent, 0), 100)}%`,
+                              background: t.backgroundColor,
+                              border: `1px solid ${t.borderColor}`,
+                              borderRadius: 999,
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </Card>
+            )}
+            {trendError && trendTop.length === 0 && (
+              <Card sx={{ p: { xs: 2, sm: 3 }, mb: 4 }}>
+                <Typography variant="body2" color="text.secondary">{trendError}</Typography>
+              </Card>
+            )}
 
             {/* Paper Cards (Vertical Stack) */}
             <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 2, sm: 3 } }}>

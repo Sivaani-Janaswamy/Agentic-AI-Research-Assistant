@@ -241,8 +241,13 @@ const LoginPage = () => {
                 setTimeout(() => setResetMessage(''), 6000);
               } catch (err) {
                 console.error("[reset] send failed", err);
+                const status = err?.response?.status;
                 const detail = err?.response?.data?.detail || err?.message || "Unknown error";
-                setResetError(`Could not create reset code: ${detail}`);
+                if (status === 429) {
+                  setResetError("Too many reset requests. Please try again in a few minutes.");
+                } else {
+                  setResetError(`Could not create reset code: ${detail}`);
+                }
               } finally {
                 setResetLoading(false);
               }

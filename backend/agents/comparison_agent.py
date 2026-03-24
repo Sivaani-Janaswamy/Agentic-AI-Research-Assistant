@@ -14,25 +14,29 @@ class ComparisonAgent:
         """
         combined_text = ""
         for p in papers:
-            combined_text += f"ID: {p.get('id')}\nTitle: {p.get('title')}\nAbstract: {p.get('summary')}\n---\n"
+            summary = p.get("summary") or "No abstract provided."
+            combined_text += f"ID: {p.get('id')}\nTitle: {p.get('title')}\nAbstract: {summary}\n---\n"
 
         prompt = f"""
-        Compare the following research papers and extract key metrics into a structured JSON matrix.
-        
-        The JSON MUST be an object with one key "papers", containing a list of objects.
-        Each object in the "papers" list must have exactly these keys:
-        - "id": (string, the ID provided)
-        - "title": (string)
-        - "accuracy": (string, specific accuracy metrics if mentioned, else "N/A")
-        - "speed": (string, inference or training speed if mentioned, else "N/A")
-        - "dataset": (string, main datasets used)
-        - "hardware": (string, hardware used for experiments)
+Compare the following research papers and extract key metrics into a structured JSON matrix.
 
-        Return ONLY the JSON. No other text.
+Rules:
+- If a metric is not mentioned, fill it with "Not specified" (do NOT leave empty and do NOT use N/A).
+- Keep values concise but specific when available.
 
-        Papers:
-        {combined_text}
-        """
+Return JSON with one key "papers": a list of objects, each having exactly:
+- "id": string (as provided)
+- "title": string
+- "accuracy": string
+- "speed": string
+- "dataset": string
+- "hardware": string
+
+Return ONLY the JSON.
+
+Papers:
+{combined_text}
+"""
 
         response = client.chat.completions.create(
             model="llama-3.1-8b-instant",
@@ -43,6 +47,11 @@ class ComparisonAgent:
         )
 
         try:
-            return json.loads(response.choices[0].message.content)
+            parsed = json.loads(response.choices[0].message.content)
+            for p in parsed.get("papers", []):
+                for k in ["accuracy", "speed", "dataset", "hardware"]:
+                    if not p.get(k) or str(p.get(k)).strip() == "":
+                        p[k] = "Not specified"
+            return parsed
         except Exception as e:
             return {"papers": [], "error": str(e)}

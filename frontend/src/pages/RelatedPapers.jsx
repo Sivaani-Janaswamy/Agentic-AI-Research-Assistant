@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Paper, List, ListItem, ListItemText, Container, Card, Divider, InputAdornment, CircularProgress } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper, List, ListItem, ListItemText, Container, Card, Divider, InputAdornment, CircularProgress, Chip } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
@@ -117,7 +117,16 @@ const RelatedPapers = () => {
                               color: "#101828",
                               variant: "body1"
                             }}
-                            secondary={paper.authors ? (Array.isArray(paper.authors) ? paper.authors.join(", ") : paper.authors) : "Research Paper"}
+                            secondary={
+                              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                                <Typography variant="body2" color="text.secondary">
+                                  {paper.authors ? (Array.isArray(paper.authors) ? paper.authors.join(", ") : paper.authors) : "Research Paper"}
+                                </Typography>
+                                {paper.category ? (
+                                  <Chip label={paper.category} size="small" sx={{ width: "fit-content" }} />
+                                ) : null}
+                              </Box>
+                            }
                           />
                         </ListItem>
                         {index < papers.length - 1 && <Divider />}

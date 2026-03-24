@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 import hashlib
@@ -18,6 +19,10 @@ import logging
 import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+import uuid
+from collections import defaultdict
+import requests
+import xml.etree.ElementTree as ET
 
 from agents.retriever_agent import RetrieverAgent
 from agents.summarizer_agent import SummarizerAgent
@@ -51,6 +56,222 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI()
 
+# Simple in-memory rate limit for forgot-password (email -> list of timestamps)
+FORGOT_WINDOW_MINUTES = 15
+FORGOT_MAX_REQUESTS = 5
+forgot_tracker = defaultdict(list)
+
+# ===== HEALTH =====
+@app.get("/health")
+def health():
+    return {
+        "status": "ok",
+        "time": datetime.datetime.utcnow().isoformat() + "Z",
+        "vector_store_ready": getattr(vector_store, "is_ready", False)
+    }
+
+@app.get("/api/trends")
+def trends():
+    """
+    Returns monthly paper counts for last 12 months, split by source:
+    - user uploads (category == 'User Upload')
+    - cached arxiv/other (everything else)
+    """
+    today = datetime.date.today().replace(day=1)
+    months_index = []
+    y, m = today.year, today.month
+    for _ in range(12):
+        months_index.insert(0, f"{y:04d}-{m:02d}")
+        m -= 1
+        if m == 0:
+            m = 12
+            y -= 1
+
+    uploads = [0]*12
+    arxiv = [0]*12
+
+    with database.engine.connect() as conn:
+        rows = list(conn.execute(
+            """
+            SELECT strftime('%Y-%m', created_at) as month,
+                   CASE WHEN category='User Upload' THEN 'uploads' ELSE 'arxiv' END as source,
+                   count(*) as count
+            FROM papers
+            WHERE created_at >= date('now','-11 months')
+            GROUP BY 1,2
+            ORDER BY 1
+            """
+        ))
+
+    month_to_idx = {m: i for i, m in enumerate(months_index)}
+    for month, source, count in rows:
+        idx = month_to_idx.get(month)
+        if idx is None:
+            continue
+        if source == 'uploads':
+            uploads[idx] = int(count)
+        else:
+            arxiv[idx] = int(count)
+
+    return {
+        "labels": list(months_index),
+        "series": [
+            {"label": "User uploads", "data": uploads},
+            {"label": "Fetched ArXiv/DB", "data": arxiv},
+        ],
+    }
+
+@app.get("/api/trends/domains")
+def domain_trends():
+    """
+    Returns top research domains (by category) over the last 6 months.
+    Provides:
+      labels: list of YYYY-MM months (6)
+      series: list of {label, data[]} for line/bar (top categories, others aggregated)
+      pie: list of {label, value} for latest month distribution
+      bar: list of {label, value} total over 6 months
+    """
+    today = datetime.date.today().replace(day=1)
+    months_index = []
+    y, m = today.year, today.month
+    for _ in range(6):
+        months_index.insert(0, f"{y:04d}-{m:02d}")
+        m -= 1
+        if m == 0:
+            m = 12
+            y -= 1
+
+    start_time = datetime.datetime.utcnow()
+    with database.engine.connect() as conn:
+        rows = list(conn.execute(text(
+            """
+            SELECT strftime('%Y-%m', created_at) as month,
+                   COALESCE(NULLIF(TRIM(category),''),'Uncategorized') as category,
+                   count(*) as count
+            FROM papers
+            WHERE created_at >= date('now','-5 months')
+            GROUP BY 1,2
+            ORDER BY 1
+            """
+        )))
+    # map counts
+    counts = defaultdict(lambda: [0]*6)
+    month_to_idx = {m: i for i, m in enumerate(months_index)}
+    for month, category, count in rows:
+        idx = month_to_idx.get(month)
+        if idx is None:
+            continue
+        counts[category][idx] = int(count)
+
+    # pick top 5 categories by total
+    totals = {cat: sum(vals) for cat, vals in counts.items()}
+    top_categories = sorted(totals.items(), key=lambda x: x[1], reverse=True)[:5]
+    top_names = set(cat for cat, _ in top_categories)
+
+    series = []
+    other = [0]*6
+    for cat, vals in counts.items():
+        if cat in top_names:
+            series.append({"label": cat, "data": vals})
+        else:
+            other = [o+v for o, v in zip(other, vals)]
+    if any(other):
+        series.append({"label": "Other", "data": other})
+
+    # If no data at all, return zeros so UI still renders
+    if not series:
+        series = [{"label": "All papers", "data": [0]*6}]
+
+    # pie for latest month
+    latest_idx = len(months_index) - 1
+    pie = []
+    for s in series:
+        pie.append({"label": s["label"], "value": s["data"][latest_idx]})
+
+    # bar totals
+    bar = [{"label": s["label"], "value": sum(s["data"])} for s in series]
+    top = sorted(bar, key=lambda x: x["value"], reverse=True)[:5]
+
+    payload = {
+        "labels": months_index,
+        "series": series,
+        "pie": pie,
+        "bar": bar,
+        "top": top
+    }
+    duration_ms = int((datetime.datetime.utcnow() - start_time).total_seconds() * 1000)
+    logger.info(f"[trends/domains] rows={len(rows)} series={len(series)} duration_ms={duration_ms}")
+    return payload
+
+def _crossref_trending(days: int = 7):
+    """
+    Fetch trending research domains from Crossref (last `days` days).
+    Aggregates the 'subject' field across works to find top categories.
+    """
+    try:
+        end = datetime.date.today()
+        start = end - datetime.timedelta(days=days)
+        url = "https://api.crossref.org/works"
+        params = {
+            "filter": f"from-pub-date:{start.isoformat()},until-pub-date:{end.isoformat()}",
+            "sort": "published",
+            "order": "desc",
+            "rows": 200,
+            "select": "DOI,subject"
+        }
+        resp = requests.get(url, params=params, timeout=8)
+        resp.raise_for_status()
+        data = resp.json()
+        items = data.get("message", {}).get("items", [])
+
+        counts = defaultdict(int)
+        total = 0
+        for it in items:
+            subjects = it.get("subject") or []
+            for s in subjects:
+                counts[s] += 1
+                total += 1
+
+        if total == 0:
+            raise RuntimeError("empty crossref response")
+
+        top = sorted(counts.items(), key=lambda x: x[1], reverse=True)[:8]
+        domains = []
+        for i, (label, count) in enumerate(top):
+            percent = round((count / total) * 100, 1)
+            domains.append({"label": label, "percent": percent, "rank": i + 1})
+
+        return {"domains": domains, "total": total, "source": "crossref"}
+    except Exception as e:
+        logger.error(f"[trends/global] failed: {e}")
+        fallback = [
+            {"label": "Artificial Intelligence", "percent": 26.0, "rank": 1},
+            {"label": "Machine Learning", "percent": 24.5, "rank": 2},
+            {"label": "Computer Vision", "percent": 18.5, "rank": 3},
+            {"label": "Natural Language Processing", "percent": 17.0, "rank": 4},
+            {"label": "Robotics", "percent": 14.0, "rank": 5},
+        ]
+        return {"domains": fallback, "total": 0, "source": "fallback"}
+
+@app.get("/api/trends/domains/online")
+def domain_trends_online():
+    return global_trends_cache
+
+@app.get("/api/trends/global")
+def domain_trends_global():
+    return global_trends_cache
+
+# ===== MIDDLEWARE: REQUEST ID + STRUCTURED ERRORS =====
+class RequestContextMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        request_id = secrets.token_hex(8)
+        request.state.request_id = request_id
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
+
+app.add_middleware(RequestContextMiddleware)
+
 # ===== GLOBAL ERROR HANDLERS =====
 
 @app.exception_handler(HTTPException)
@@ -67,13 +288,14 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    logger.exception(f"Unhandled error on {request.url.path}: {str(exc)}")
+    req_id = getattr(request.state, "request_id", "unknown")
+    logger.exception(f"[{req_id}] Unhandled error on {request.url.path}: {str(exc)}")
     return JSONResponse(
         status_code=500,
         content={
             "error": "An internal server error occurred.",
             "status_code": 500,
-            "details": str(exc),
+            "request_id": req_id,
             "timestamp": datetime.datetime.utcnow().isoformat()
         },
     )
@@ -81,16 +303,18 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ===== CORS CONFIG =====
-origins = [
-    "http://localhost:5173",
-    "https://agentic-ai-research-assistant-two.vercel.app",
-    "https://agentic-ai-research-assistant.onrender.com",
-]
+raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,*").split(",")
+origins = [o.strip() for o in raw_origins if o.strip()]
+allow_credentials = True
+# If '*' is present, FastAPI requires the literal list to be ['*'] and credentials must be disabled
+if "*" in origins:
+    origins = ["*"]
+    allow_credentials = False
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -103,6 +327,40 @@ gap_agent = GapAgent()
 comparison_agent = ComparisonAgent()
 vector_store = VectorStore()
 rag_agent = RAGAgent()
+
+# Warm up vector store in the background so first user doesn’t pay the cost
+def warmup_vector_store():
+    try:
+        vector_store._ensure_loaded()
+        logger.info("Vector store warmup complete")
+    except Exception as e:
+        logger.warning(f"Vector store warmup skipped: {e}")
+
+import threading
+threading.Thread(target=warmup_vector_store, daemon=True).start()
+
+# ===== GLOBAL TREND CACHE (Crossref) =====
+global_trends_cache = {"domains": [], "total": 0, "source": "uninitialized", "last_success": None}
+
+def fetch_crossref_trends():
+    global global_trends_cache
+    try:
+        data = _crossref_trending()
+        data["last_success"] = datetime.datetime.utcnow().isoformat() + "Z"
+        global_trends_cache = data
+        logger.info(f"[trends cache] refreshed source={data.get('source')} items={len(data.get('domains', []))}")
+    except Exception as e:
+        logger.warning(f"[trends cache] refresh failed: {e}")
+
+def schedule_trends_refresh(interval_hours: int = 6):
+    def loop():
+        while True:
+            fetch_crossref_trends()
+            time.sleep(interval_hours * 3600)
+    threading.Thread(target=loop, daemon=True).start()
+
+fetch_crossref_trends()
+schedule_trends_refresh(6)
 
 # ===== EMAIL CONFIG =====
 SMTP_HOST = os.getenv("SMTP_HOST")
@@ -237,10 +495,12 @@ def google_auth(request: GoogleAuthRequest, db: Session = Depends(database.get_d
 
         # Generate JWT
         access_token = auth.create_access_token(data={"sub": user.id})
+        refresh_token = auth.create_refresh_token(data={"sub": user.id})
         
         return {
             "access_token": access_token,
             "token_type": "bearer",
+            "refresh_token": refresh_token,
             "user": {
                 "id": user.id,
                 "email": user.email,
@@ -273,10 +533,12 @@ def signup(user_in: UserCreate, db: Session = Depends(database.get_db)):
     
     # Generate JWT
     access_token = auth.create_access_token(data={"sub": str(new_user.id)})
+    refresh_token = auth.create_refresh_token(data={"sub": str(new_user.id)})
     
     return {
         "access_token": access_token,
         "token_type": "bearer",
+        "refresh_token": refresh_token,
         "user": {
             "id": new_user.id,
             "email": new_user.email,
@@ -294,9 +556,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         )
 
     access_token = auth.create_access_token(data={"sub": user.id})
+    refresh_token = auth.create_refresh_token(data={"sub": user.id})
     return {
         "access_token": access_token,
         "token_type": "bearer",
+        "refresh_token": refresh_token,
         "user": {
             "id": user.id,
             "email": user.email,
@@ -312,12 +576,35 @@ def get_me(current_user: database.User = Depends(get_current_user)):
         "full_name": current_user.full_name
     }
 
+@app.post("/api/auth/refresh")
+def refresh_token(token: str = Form(...)):
+    payload = auth.decode_refresh_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+    access_token = auth.create_access_token(data={"sub": user_id})
+    new_refresh = auth.create_refresh_token(data={"sub": user_id})
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "refresh_token": new_refresh
+    }
+
 @app.post("/api/auth/forgot-password")
 def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(database.get_db)):
     user = db.query(database.User).filter(database.User.email == request.email).first()
     if not user:
         # avoid user enumeration
         return {"message": "If that email exists, a reset code was created."}
+    # rate limit per email
+    now = datetime.datetime.utcnow()
+    window_start = now - datetime.timedelta(minutes=FORGOT_WINDOW_MINUTES)
+    forgot_tracker[user.email] = [t for t in forgot_tracker[user.email] if t > window_start]
+    if len(forgot_tracker[user.email]) >= FORGOT_MAX_REQUESTS:
+        raise HTTPException(status_code=429, detail="Too many reset requests. Try again later.")
+    forgot_tracker[user.email].append(now)
     # create hashed token stored in DB for persistence
     raw_token = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
@@ -417,7 +704,20 @@ def remove_favorite(paper_id: str, current_user: database.User = Depends(get_cur
 
 @app.get("/api/user/history")
 def get_history(current_user: database.User = Depends(get_current_user), db: Session = Depends(database.get_db)):
-    return current_user.sessions
+    sessions = (
+        db.query(database.ResearchSession)
+        .filter(database.ResearchSession.user_id == current_user.id)
+        .order_by(database.ResearchSession.last_accessed.desc())
+        .all()
+    )
+    return [
+        {
+            "id": s.id,
+            "session_name": s.session_name,
+            "last_accessed": s.last_accessed.isoformat() if s.last_accessed else None,
+        }
+        for s in sessions
+    ]
 
 # ===== PAPER DISCOVERY ENDPOINTS =====
 
@@ -427,6 +727,8 @@ async def upload_pdf(
     db: Session = Depends(database.get_db)
 ):
     try:
+        if file.spool_max_size > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File too large. Max 10MB.")
         if not file.filename.endswith(".pdf"):
             raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
         
@@ -608,31 +910,59 @@ async def summarize_paper(
 @app.get("/api/papers/related")
 def get_related_papers(q: Optional[str] = None, paper_id: Optional[str] = None):
     try:
+        if not q and not paper_id:
+            raise HTTPException(status_code=400, detail="Query (q) or paper_id must be provided.")
         if paper_id:
             # First fetch the paper to get its content for comparison
             paper = vector_store.get_by_id(paper_id)
             if not paper:
                 # If not in vector store, try fetching from ArXiv
                 paper = get_paper_by_id(paper_id)
-            
+
             if not paper:
                 raise HTTPException(status_code=404, detail="Paper not found.")
-            
+
             query = f"Title: {paper['title']}\nAbstract: {paper['summary']}"
-            results = vector_store.search(query, k=5)
-            return {"related_papers": results}
+            local_results = vector_store.search(query, k=5)
+            arxiv_results = retriever.run(paper['title'])[:3]
+            combined = []
+            seen = set()
+            for p in local_results + arxiv_results:
+                pid = p.get("id")
+                if pid in seen:
+                    continue
+                seen.add(pid)
+                combined.append({
+                    "id": pid,
+                    "title": p.get("title"),
+                    "summary": p.get("summary", ""),
+                    "pdf_url": p.get("pdf_url", ""),
+                    "authors": p.get("authors", []),
+                    "category": p.get("category", "General")
+                })
+            return {"related_papers": combined[:10]}
         elif q:
             # For a topic query, search both local and ArXiv for a better experience
-            local_results = vector_store.search(q, k=3)
-            arxiv_results = retriever.run(q)
-            
+            local_results = vector_store.search(q, k=5)
+            arxiv_results = retriever.run(q)[:5]
+
             # Combine and deduplicate by ID if possible
-            combined = local_results
-            existing_ids = {p["id"] for p in local_results}
-            for p in arxiv_results:
-                if p["id"] not in existing_ids:
-                    combined.append(p)
-            
+            combined = []
+            seen = set()
+            for p in local_results + arxiv_results:
+                pid = p.get("id")
+                if pid in seen:
+                    continue
+                seen.add(pid)
+                combined.append({
+                    "id": pid,
+                    "title": p.get("title"),
+                    "summary": p.get("summary", ""),
+                    "pdf_url": p.get("pdf_url", ""),
+                    "authors": p.get("authors", []),
+                    "category": p.get("category", "General")
+                })
+
             return {"related_papers": combined[:10]}
         else:
             raise HTTPException(status_code=400, detail="Query (q) or paper_id must be provided.")
@@ -696,23 +1026,41 @@ def compare_papers(
     db: Session = Depends(database.get_db)
 ):
     try:
-        if not request.paper_ids:
-            raise HTTPException(status_code=400, detail="List of paper IDs cannot be empty.")
+        if not request.paper_ids or len(request.paper_ids) < 2 or len(request.paper_ids) > 3:
+            raise HTTPException(status_code=400, detail="Provide 2-3 paper IDs to compare.")
             
         papers_data = []
+        missing_ids = []
         for pid in request.paper_ids:
             # Check vector store first
             p = vector_store.get_by_id(pid)
             if not p:
-                # Then ArXiv
-                p = get_paper_by_id(pid)
-            
+                # Then DB
+                paper_db = db.query(database.Paper).filter(
+                    (database.Paper.id == pid) | (database.Paper.external_id == pid)
+                ).first()
+                if paper_db:
+                    summary_text = paper_db.abstract or ""
+                    if hasattr(paper_db, "summary_text") and paper_db.summary_text:
+                        summary_text = paper_db.summary_text
+                    p = {
+                        "id": paper_db.external_id or paper_db.id,
+                        "title": paper_db.title,
+                        "summary": summary_text,
+                        "pdf_url": paper_db.pdf_url or "",
+                        "extracted": ""
+                    }
+
             if p:
                 papers_data.append(p)
-                
+            else:
+                missing_ids.append(pid)
+
         if not papers_data:
             raise HTTPException(status_code=404, detail="None of the provided paper IDs were found.")
-            
+        if missing_ids and len(papers_data) < len(request.paper_ids):
+            raise HTTPException(status_code=404, detail=f"Some paper IDs were not found locally: {', '.join(missing_ids)}")
+
         result = comparison_agent.run(papers_data)
         
         # Save any new ArXiv papers to vector store
@@ -802,4 +1150,5 @@ def ask_question(request: QuestionRequest):
         return {"answer": answer}
 
     except Exception as e:
-        return {"error": str(e)}
+        logger.exception(f"Ask failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to answer question")
