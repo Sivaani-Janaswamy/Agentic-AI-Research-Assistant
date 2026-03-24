@@ -62,3 +62,8 @@ export const getHistory = async () => {
   const response = await apiClient.get('user/history');
   return response.data;
 };
+
+export const emailPaper = async (paperId) => {
+  const response = await apiClient.post('papers/email', { paper_id: paperId });
+  return response.data;
+};

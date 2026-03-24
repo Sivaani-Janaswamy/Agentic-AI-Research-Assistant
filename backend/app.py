@@ -418,6 +418,9 @@ class FavoriteRequest(BaseModel):
     title: Optional[str] = None
     pdf_url: Optional[str] = None
 
+class EmailPaperRequest(BaseModel):
+    paper_id: str
+
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
@@ -452,6 +455,22 @@ def send_reset_email(email: str, token: str):
         return True
     except Exception as e:
         logger.error(f"Failed to send reset email: {e}")
+        return False
+
+def send_email(to_email: str, subject: str, body: str):
+    if not (SMTP_HOST and SMTP_USER and SMTP_PASS and SMTP_FROM):
+        logger.warning("SMTP not fully configured; skipping email send")
+        return True
+    try:
+        context = ssl.create_default_context()
+        msg = f"Subject: {subject}\nFrom: {SMTP_FROM}\nTo: {to_email}\n\n{body}"
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=5) as server:
+            server.starttls(context=context)
+            server.login(SMTP_USER, SMTP_PASS)
+            server.sendmail(SMTP_FROM, [to_email], msg.encode("utf-8"))
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send email: {e}")
         return False
 
 # ===== AUTH ENDPOINTS =====
@@ -1182,3 +1201,51 @@ def ask_question(request: QuestionRequest):
     except Exception as e:
         logger.exception(f"Ask failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to answer question")
+
+@app.post("/api/papers/email")
+def email_paper(request: EmailPaperRequest, current_user: database.User = Depends(get_current_user), db: Session = Depends(database.get_db)):
+    try:
+        pid = request.paper_id
+        paper = db.query(database.Paper).filter(
+            (database.Paper.id == pid) | (database.Paper.external_id == pid)
+        ).first()
+
+        if not paper:
+            ap = get_paper_by_id(pid)
+            if not ap:
+                raise HTTPException(status_code=404, detail="Paper not found.")
+            paper = ap  # dict fallback
+
+        title = getattr(paper, "title", None) or paper.get("title", "Untitled")
+        abstract = getattr(paper, "abstract", None) or paper.get("summary", "") or "No abstract available."
+        pdf_url = getattr(paper, "pdf_url", None) or paper.get("pdf_url", "")
+
+        # Summarize using existing summarizer if available
+        summary_text = ""
+        try:
+            summary_res = summarizer.run({"title": title, "summary": abstract})
+            summary_text = summary_res.get("summary") or summary_res.get("answer") or ""
+        except Exception as e:
+            logger.warning(f"Summary generation failed: {e}")
+
+        body_lines = [
+            f"Title: {title}",
+            f"PDF: {pdf_url or 'N/A'}",
+            "",
+            "Abstract:",
+            abstract,
+        ]
+        if summary_text:
+            body_lines += ["", "Summary:", summary_text]
+
+        body = "\n".join(body_lines)
+        ok = send_email(current_user.email, f"Paper: {title}", body)
+        if not ok:
+            raise HTTPException(status_code=500, detail="Failed to send email")
+
+        return {"status": "sent"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Email paper failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to email paper")

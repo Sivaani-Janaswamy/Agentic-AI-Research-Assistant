@@ -6,12 +6,18 @@ import {
   CardActions,
   Button,
   Box,
-  Chip
+  Chip,
+  Tooltip,
+  IconButton
 } from "@mui/material";
 
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import DownloadIcon from "@mui/icons-material/Download";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { emailPaper } from "../api/papers";
+import { isAuthenticated } from "../api/auth";
+import Lottie from "lottie-react";
+import beeAnimation2 from "../assets/BeeMail.json";
 
 const PaperCard = ({ paper, onSave }) => {
   const { 
@@ -28,6 +34,15 @@ const PaperCard = ({ paper, onSave }) => {
     : [];
   const bullets = sentences.slice(0, 3);
   const tldr = sentences[0] || abstract;
+
+  const sendToEmail = async () => {
+    try {
+      await emailPaper(paper.id || paper.external_id);
+      alert("Sent to your email.");
+    } catch (e) {
+      alert(e?.response?.data?.detail || "Could not send email. Make sure you are logged in and SMTP is configured.");
+    }
+  };
 
   return (
     <Card
@@ -174,6 +189,29 @@ const PaperCard = ({ paper, onSave }) => {
         >
           View Full Paper
         </Button>
+
+        {isAuthenticated() && (
+          <Button
+            variant="outlined"
+            onClick={sendToEmail}
+            sx={{
+              ml: 1,
+              borderRadius: "999px",
+              borderColor: "#D0D5DD",
+              color: "#344054",
+              textTransform: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              px: 1.5
+            }}
+          >
+            <Box sx={{ width: 28, height: 28 }}>
+              <Lottie animationData={beeAnimation2} loop style={{ width: "100%", height: "100%" }} />
+            </Box>
+            Send to mail
+          </Button>
+        )}
       </CardActions>
     </Card>
   );
