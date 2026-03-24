@@ -59,7 +59,7 @@ const PdfUpload = () => {
 
             <Card sx={{ p: { xs: 3, sm: 6 }, mb: 4, textAlign: "center", border: "2px dashed #EAECF0", bgcolor: "#F9FAFB", boxShadow: "none" }}>
               <Box sx={{ mb: 3 }}>
-                <CloudUploadIcon sx={{ fontSize: { xs: 36, sm: 48 }, color: "#667085" }} />
+                <CloudUploadIcon sx={{ fontSize: { xs: 36, sm: 48 }, color: "#9E77ED " }} />
               </Box>
               <Typography variant="h6" sx={{ mb: 1, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>Choose a PDF file to analyze</Typography>
               <Typography variant="body2" sx={{ mb: 3, color: "#667085" }}>Maximum file size: 25MB</Typography>
@@ -68,7 +68,7 @@ const PdfUpload = () => {
                 <Button
                   variant="outlined"
                   component="label"
-                  sx={{ width: { xs: "100%", sm: "auto" }, borderColor: "#D0D5DD", color: "#344054", bgcolor: "#ffffff", "&:hover": { bgcolor: "#F9FAFB" } }}
+                  sx={{ width: { xs: "100%", sm: "auto" }, borderColor: "#D0D5DD", color: "#ffffff", bgcolor: "#9E77ED ", "&:hover": { bgcolor: "#F9FAFB" } }}
                 >
                   Browse File
                   <input
