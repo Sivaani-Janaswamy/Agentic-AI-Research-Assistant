@@ -8,11 +8,13 @@ import ResearchGapDetector from './pages/ResearchGapDetector';
 import RelatedPapers from './pages/RelatedPapers';
 import FavoritePapers from './pages/FavoritePapers';
 import Home from './pages/Home';
+import Landing from './pages/Landing';
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Landing />} />
+      <Route path="/home" element={<Home />} />
       <Route path="/PaperComparison" element={<PaperComparison />} />
       <Route path="/PdfUpload" element={<PdfUpload />} />
       <Route path="/ResearchGapDetector" element={<ResearchGapDetector />} />

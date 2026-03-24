@@ -784,17 +784,31 @@ async def upload_pdf(
         if isinstance(e, HTTPException): raise e
         return {"error": str(e)}
 
+def paginate_total(query):
+    return query.count()
+
 @app.get("/api/papers/search")
-def search_papers(q: str, limit: int = 10, offset: int = 0, db: Session = Depends(database.get_db)):
+def search_papers(
+    q: str,
+    page: int = 1,
+    page_size: int = 10,
+    db: Session = Depends(database.get_db)
+):
     try:
+        page = max(page, 1)
+        page_size = max(1, min(page_size, 50))
+        offset = (page - 1) * page_size
+
         # 1. Search local DB first
-        local_papers = db.query(database.Paper).filter(
+        base_query = db.query(database.Paper).filter(
             (database.Paper.title.ilike(f"%{q}%")) | 
             (database.Paper.abstract.ilike(f"%{q}%"))
-        ).limit(limit).offset(offset).all()
+        )
+        total = paginate_total(base_query)
+        local_papers = base_query.order_by(database.Paper.publish_date.desc()).limit(page_size).offset(offset).all()
         
         # 2. If results are few, fetch from ArXiv to supplement
-        if len(local_papers) < limit:
+        if len(local_papers) < page_size:
             arxiv_papers = retriever.run(q)
             for ap in arxiv_papers:
                 # Cache in local DB if not already there
@@ -812,23 +826,39 @@ def search_papers(q: str, limit: int = 10, offset: int = 0, db: Session = Depend
             db.commit()
             
             # Re-query local DB to get combined results
-            local_papers = db.query(database.Paper).filter(
+            base_query = db.query(database.Paper).filter(
                 (database.Paper.title.ilike(f"%{q}%")) | 
                 (database.Paper.abstract.ilike(f"%{q}%"))
-            ).limit(limit).offset(offset).all()
+            )
+            total = paginate_total(base_query)
+            local_papers = base_query.order_by(database.Paper.publish_date.desc()).limit(page_size).offset(offset).all()
 
-        return local_papers
+        return {
+            "items": local_papers,
+            "total": total,
+            "page": page,
+            "page_size": page_size
+        }
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/papers/recent")
-def get_recent_papers(limit: int = 10, db: Session = Depends(database.get_db)):
+def get_recent_papers(page: int = 1, page_size: int = 10, db: Session = Depends(database.get_db)):
     try:
-        # Fetch most recently added or published papers
-        papers = db.query(database.Paper).order_by(database.Paper.publish_date.desc()).limit(limit).all()
-        return papers
+        page = max(page, 1)
+        page_size = max(1, min(page_size, 50))
+        offset = (page - 1) * page_size
+        base_query = db.query(database.Paper)
+        total = paginate_total(base_query)
+        papers = base_query.order_by(database.Paper.publish_date.desc()).limit(page_size).offset(offset).all()
+        return {
+            "items": papers,
+            "total": total,
+            "page": page,
+            "page_size": page_size
+        }
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/papers/{paper_id}")
 def get_paper_details(paper_id: str, db: Session = Depends(database.get_db)):

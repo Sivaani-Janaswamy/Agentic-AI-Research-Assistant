@@ -1,7 +1,7 @@
 import apiClient from './apiClient';
 
-export const fetchRecentPapers = async (limit = 10) => {
-  const response = await apiClient.get('papers/recent', { params: { limit } });
+export const fetchRecentPapers = async (page = 1, pageSize = 10) => {
+  const response = await apiClient.get('papers/recent', { params: { page, page_size: pageSize } });
   return response.data;
 };
 
@@ -25,8 +25,8 @@ export const getGlobalTrends = async () => {
   return response.data;
 };
 
-export const searchPapers = async (query, limit = 10) => {
-  const response = await apiClient.get('papers/search', { params: { q: query, limit } });
+export const searchPapers = async (query, page = 1, pageSize = 10) => {
+  const response = await apiClient.get('papers/search', { params: { q: query, page, page_size: pageSize } });
   return response.data;
 };
 

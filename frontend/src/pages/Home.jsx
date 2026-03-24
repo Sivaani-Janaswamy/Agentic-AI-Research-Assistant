@@ -30,6 +30,10 @@ const labelMap = {
 
 function Home() {
   const [papers, setPapers] = useState([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 10;
+  const maxPages = 10;
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [trendTop, setTrendTop] = useState([]);
@@ -41,11 +45,17 @@ function Home() {
     loadTrends();
   }, []);
 
+  // Smooth scroll to top on page change to avoid jank
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page]);
+
   const loadInitialPapers = async () => {
     setLoading(true);
     try {
-      const data = await fetchRecentPapers();
-      setPapers(data);
+      const data = await fetchRecentPapers(page, pageSize);
+      setPapers(data.items || []);
+      setTotal(data.total || 0);
     } catch (error) {
       console.error("Error fetching papers:", error);
     } finally {
@@ -92,20 +102,50 @@ function Home() {
   }));
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) {
+    const isSearch = !!searchQuery.trim();
+    if (!isSearch) {
+      setPage(1);
       loadInitialPapers();
       return;
     }
     setLoading(true);
     try {
-      const data = await searchPapers(searchQuery);
-      setPapers(data);
+      const data = await searchPapers(searchQuery, page, pageSize);
+      setPapers(data.items || []);
+      setTotal(data.total || 0);
     } catch (error) {
       console.error("Error searching papers:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  const handlePageChange = async (newPage) => {
+    const clamped = Math.max(1, Math.min(newPage, maxPages));
+    setPage(clamped);
+    const isSearch = !!searchQuery.trim();
+    setLoading(true);
+    try {
+      if (isSearch) {
+        const data = await searchPapers(searchQuery, clamped, pageSize);
+        setPapers(data.items || []);
+        setTotal(data.total || 0);
+      } else {
+        const data = await fetchRecentPapers(clamped, pageSize);
+        setPapers(data.items || []);
+        setTotal(data.total || 0);
+      }
+    } catch (error) {
+      console.error("Error loading page:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const currentMaxPage = Math.min(
+    maxPages,
+    Math.max(1, Math.ceil((total || 0) / pageSize))
+  );
 
   const handleSavePaper = async (paper) => {
     try {
@@ -232,7 +272,7 @@ function Home() {
             )}
 
             {/* Paper Cards (Vertical Stack) */}
-            <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 2, sm: 3 } }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 2, sm: 3 }, minHeight: 320 }}>
               {loading ? (
                 <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
                   <CircularProgress color="inherit" />
@@ -246,6 +286,27 @@ function Home() {
                   No papers found.
                 </Typography>
               )}
+            </Box>
+
+            {/* Pagination */}
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 3 }}>
+              <Typography variant="body2" color="text.secondary">
+                Page {page} of {currentMaxPage}
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Chip
+                  label="Prev"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page <= 1 || loading}
+                  sx={{ backgroundColor: "#EEF2FF", color: "#312E81", fontWeight: 700 }}
+                />
+                <Chip
+                  label="Next"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page >= currentMaxPage || loading}
+                  sx={{ backgroundColor: "#EEF2FF", color: "#312E81", fontWeight: 700 }}
+                />
+              </Box>
             </Box>
           </Container>
         </Box>

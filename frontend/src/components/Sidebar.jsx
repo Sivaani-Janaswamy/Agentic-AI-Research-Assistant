@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
-  IconButton,
   Divider,
   List,
   ListItemButton,
@@ -10,14 +9,12 @@ import {
   useMediaQuery,
   CircularProgress
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
 import HistoryIcon from "@mui/icons-material/History";
 import { getHistory } from "../api/papers";
 import { isAuthenticated } from "../api/auth";
 
 function Sidebar() {
   const isDesktop = useMediaQuery("(min-width:1024px)");
-  const [visible, setVisible] = React.useState(true);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -39,7 +36,7 @@ function Sidebar() {
     }
   };
 
-  if (!isDesktop || !visible) return null;
+  if (!isDesktop) return null;
 
   return (
     <Box
@@ -66,16 +63,6 @@ function Sidebar() {
             History
           </Typography>
         </Box>
-        <IconButton
-          onClick={() => setVisible(false)}
-          size="small"
-          sx={{
-            color: "#667085",
-            "&:hover": { background: "#EAECF0" }
-          }}
-        >
-          <CloseIcon sx={{ fontSize: 18 }} />
-        </IconButton>
       </Box>
 
       <Divider sx={{ mb: 1, borderColor: "#EAECF0" }} />
