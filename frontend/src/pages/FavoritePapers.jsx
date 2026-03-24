@@ -46,14 +46,17 @@ const FavoritePapers = () => {
           sx={{
             flexGrow: 1,
             p: { xs: 2, sm: 3, md: 4, lg: 6 },
-            ml: { lg: "280px", xs: 0 },
+            ml: { lg: 0, xs: 0 },
             background: "#F8FAFF",
             minHeight: "calc(100vh - 72px)"
           }}
         >
           <Container maxWidth="md">
-            <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: "1.75rem", sm: "2.125rem" }, color: "#101828", mb: 4 }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: "1.75rem", sm: "2.125rem" }, color: "#101828", mb: 1 }}>
               Favorite Papers
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 4, color: "#667085", fontSize: { xs: "0.9rem", sm: "1rem" } }}>
+                  View list of favorite research papers for quick access to important literature.
             </Typography>
 
             {loading ? (

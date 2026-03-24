@@ -42,14 +42,17 @@ const PdfUpload = () => {
           sx={{
             flexGrow: 1,
             p: { xs: 2, sm: 3, md: 4, lg: 6 },
-            ml: { lg: "280px", xs: 0 },
+            ml: { lg: 0, xs: 0 },
             background: "#F8FAFF",
             minHeight: "calc(100vh - 72px)"
           }}
         >
           <Container maxWidth="md">
-            <Typography variant="h4" sx={{ mb: 4, fontWeight: 800, fontSize: { xs: "1.75rem", sm: "2.125rem" }, color: "#101828" }}>
-              PDF Upload & AI Summary
+            <Typography variant="h4" sx={{mb:1, fontWeight: 800, fontSize: { xs: "1.75rem", sm: "2.125rem" }, color: "#101828" }}>
+              PDF Upload Summary
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 4, color: "#667085", fontSize: { xs: "0.9rem", sm: "1rem" } }}>
+                          Select papers to obtain complete summaries, key findings, and methodology insights.
             </Typography>
 
             <Card sx={{ p: { xs: 3, sm: 6 }, mb: 4, textAlign: "center", border: "2px dashed #EAECF0", bgcolor: "#F9FAFB", boxShadow: "none" }}>

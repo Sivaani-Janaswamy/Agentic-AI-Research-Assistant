@@ -21,6 +21,8 @@ import Alert from "@mui/material/Alert";
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/Logout";
 import HistoryIcon from "@mui/icons-material/History";
+import Lottie from "lottie-react";
+import beeAnimation from "../assets/Bee.json";
 import { Link, useLocation } from "react-router-dom";
 import { isAuthenticated, logout, getStoredUser, fetchMe } from "../api/auth";
 import { getHistory } from "../api/papers";
@@ -156,20 +158,22 @@ const Navbar = () => {
           </IconButton>
 
           {/* Logo */}
-          <Typography
-            variant="h6"
-            component={Link}
-            to="/"
-            sx={{
-              fontWeight: 800,
-              textDecoration: "none",
-              color: "#101828",
-              flexGrow: { xs: 1, lg: 0 },
-              letterSpacing: -0.2
-            }}
-          >
-            BeeResearch
-          </Typography>
+          <Box component={Link} to="/" sx={{ display: "flex", alignItems: "center", gap: 1, textDecoration: "none" }}>
+            <Box sx={{ width: 36, height: 36 }}>
+              <Lottie animationData={beeAnimation} loop style={{ width: "100%", height: "100%" }} />
+            </Box>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 800,
+                textDecoration: "none",
+                color: "#101828",
+                letterSpacing: -0.2
+              }}
+            >
+              BeeResearch
+            </Typography>
+          </Box>
 
           {/* Desktop Navigation Links */}
           <Box sx={{ display: { xs: "none", lg: "flex" }, gap: 3 }}>

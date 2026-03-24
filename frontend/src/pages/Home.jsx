@@ -176,7 +176,7 @@ function Home() {
           sx={{
             flexGrow: 1,
             p: { xs: 2, sm: 3, md: 4, lg: 6 },
-            ml: { lg: "280px", xs: 0 },
+            ml: { lg: 0, xs: 0 },
             background: "#F8FAFF",
             minHeight: "calc(100vh - 72px)"
           }}

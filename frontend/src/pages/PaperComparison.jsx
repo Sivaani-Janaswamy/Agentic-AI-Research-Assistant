@@ -101,7 +101,7 @@ const PaperComparison = () => {
           sx={{
             flexGrow: 1,
             p: { xs: 2, sm: 3, md: 4, lg: 6 },
-            ml: { lg: "280px", xs: 0 },
+            ml: { lg: 0, xs: 0 },
             background: "#F8FAFF",
             minHeight: "calc(100vh - 72px)"
           }}
@@ -114,7 +114,18 @@ const PaperComparison = () => {
               Select papers to compare across key metrics and methodologies.
             </Typography>
 
-            <Card sx={{ p: { xs: 3, sm: 4 }, mb: 6 }}>
+            <Card
+              sx={{
+                p: { xs: 3, sm: 4 },
+                mb: 6,
+                maxWidth: 1100,
+                mx: "auto",
+                borderRadius: 1,
+                border: "1px solid #EAECF0",
+                boxShadow: "0px 4px 6px -2px rgba(16, 24, 40, 0.03), 0px 12px 16px -4px rgba(16, 24, 40, 0.08)",
+                overflow: "hidden",
+              }}
+            >
               {errorMsg && (
                 <Alert
                   severity="error"
@@ -124,37 +135,42 @@ const PaperComparison = () => {
                   {errorMsg}
                 </Alert>
               )}
-              <Typography variant="h6" sx={{ mb: 2, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>
+              <Typography variant="h6" sx={{ mb: 2, fontSize: { xs: "1.1rem", sm: "1.25rem" }, fontWeight: 700, color: "#101828" }}>
                 {loadingFavs ? "Loading your library..." : `You have ${favorites.length} papers in your library.`}
               </Typography>
-              <Stack direction="column" spacing={1} sx={{ mb: 3 }}>
+              <Stack direction="column" spacing={1.5} sx={{ mb: 4 }}>
                 {favorites.map(f => (
                   <FormControlLabel
                     key={f.paper_id}
                     control={<Checkbox checked={selected[f.paper_id] || false} onChange={() => handleSelect(f.paper_id)} />}
                     label={f.title}
+                    sx={{ alignItems: "flex-start", "& .MuiCheckbox-root": { mt: 0.2 } }}
                   />
                 ))}
               </Stack>
-              <Button
-                variant="contained"
-                onClick={handleCompare}
-                disabled={
-                  comparing ||
-                  loadingFavs ||
-                  Object.values(selected).filter(Boolean).length < 2
-                }
-                sx={{
-                  bgcolor: "#101828",
-                  "&:hover": { bgcolor: "#1D2939" },
-                  px: { xs: 3, sm: 6 },
-                  py: 1.5,
-                  borderRadius: "30px",
-                  fontSize: { xs: "0.875rem", sm: "1rem" }
-                }}
-              >
-                {comparing ? <CircularProgress size={24} color="inherit" /> : 'Start Comparison Matrix'}
-              </Button>
+              <Box sx={{ display: "flex", justifyContent: "flex-start", pb: 1 }}>
+                <Button
+                  variant="contained"
+                  onClick={handleCompare}
+                  disabled={
+                    comparing ||
+                    loadingFavs ||
+                    Object.values(selected).filter(Boolean).length < 2
+                  }
+                  sx={{
+                    background: "linear-gradient(90deg, #7F56D9 0%, #9E77ED 100%)",
+                    "&:hover": { background: "linear-gradient(90deg, #6B46C1 0%, #7F56D9 100%)" },
+                    px: { xs: 3, sm: 6 },
+                    py: 1.4,
+                    borderRadius: "999px",
+                    fontSize: { xs: "0.95rem", sm: "1rem" },
+                    fontWeight: 700,
+                    boxShadow: "0 12px 32px -14px rgba(127,86,217,0.6)"
+                  }}
+                >
+                  {comparing ? <CircularProgress size={24} color="inherit" /> : 'Start Comparison Matrix'}
+                </Button>
+              </Box>
             </Card>
 
             {results && results.matrix.length > 0 && (
@@ -162,7 +178,7 @@ const PaperComparison = () => {
                 <Typography variant="h6" sx={{ mb: 3, fontWeight: 700, fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>
                   Comparison Matrix
                 </Typography>
-                <TableContainer component={Card} sx={{ boxShadow: "none", border: "1px solid #EAECF0", overflowX: "auto" }}>
+                <TableContainer component={Card} sx={{ boxShadow: "none", border: "1px solid #EAECF0", overflowX: "auto", borderRadius: 14 }}>
                   <Table sx={{ minWidth: { xs: 800, lg: "100%" } }}>
                     <TableHead sx={{ bgcolor: "#F9FAFB" }}>
                       <TableRow>

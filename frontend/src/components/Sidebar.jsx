@@ -41,18 +41,17 @@ function Sidebar() {
   return (
     <Box
       sx={{
-        position: "fixed",
-        left: 0,
+        position: "sticky",
         top: "72px", // Matches Navbar height + small buffer
         width: 280,
         height: "calc(100vh - 72px)",
+        maxHeight: "calc(100vh - 72px)",
         background: "linear-gradient(180deg, #F5F3FF 0%, #FFFFFF 60%)",
         pt: 2,
         px: 1.5,
         borderRight: "1px solid #EAECF0",
         overflowY: "auto",
-        zIndex: (theme) => theme.zIndex.drawer,
-        transition: "width 0.3s ease",
+        flexShrink: 0,
       }}
     >
       {/* Header */}
