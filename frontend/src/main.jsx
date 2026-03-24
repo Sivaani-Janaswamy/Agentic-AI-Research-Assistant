@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -11,7 +12,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <ThemeProvider theme={theme}>
     <CssBaseline />
     <BrowserRouter>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     </BrowserRouter>
   </ThemeProvider>
 );

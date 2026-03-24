@@ -4,8 +4,10 @@ import Lottie from "lottie-react";
 import beeAnimation from "../assets/bee.json";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { isAuthenticated } from "../api/auth";
 
 const Landing = () => {
+  const authed = isAuthenticated();
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "radial-gradient(circle at 20% 20%, #F4F5FF 0, #F8FAFF 40%, #FFFFFF 100%)" }}>
       <Navbar />
@@ -38,15 +40,17 @@ const Landing = () => {
               sx={{ borderRadius: 999, px: 3, py: 1.1, textTransform: "none", fontWeight: 700 }}
               onClick={() => (window.location.href = "/home")}
             >
-              Open the App
+              {authed ? "Open the App" : "Start exploring"}
             </Button>
-            <Button
-              variant="outlined"
-              sx={{ borderRadius: 999, px: 3, py: 1.1, textTransform: "none", fontWeight: 700, borderColor: "#D0D5DD", color: "#344054" }}
-              onClick={() => (window.location.href = "/signup")}
-            >
-              Sign up / Log in
-            </Button>
+            {!authed && (
+              <Button
+                variant="outlined"
+                sx={{ borderRadius: 999, px: 3, py: 1.1, textTransform: "none", fontWeight: 700, borderColor: "#D0D5DD", color: "#344054" }}
+                onClick={() => (window.location.href = "/signup")}
+              >
+                Sign up / Log in
+              </Button>
+            )}
           </Box>
           <Box id="features" sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 3 }}>
             {["Upload & summarize", "Crossref live trends", "Compare papers", "Save favorites"].map((item) => (

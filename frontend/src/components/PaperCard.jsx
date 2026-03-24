@@ -8,7 +8,9 @@ import {
   Box,
   Chip,
   Tooltip,
-  IconButton
+  IconButton,
+  Snackbar,
+  Alert
 } from "@mui/material";
 
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
@@ -35,12 +37,18 @@ const PaperCard = ({ paper, onSave }) => {
   const bullets = sentences.slice(0, 3);
   const tldr = sentences[0] || abstract;
 
+  const [snackbar, setSnackbar] = React.useState({ open: false, message: "", severity: "info" });
+
   const sendToEmail = async () => {
     try {
       await emailPaper(paper.id || paper.external_id);
-      alert("Sent to your email.");
+      setSnackbar({ open: true, message: "Sent to your email.", severity: "success" });
     } catch (e) {
-      alert(e?.response?.data?.detail || "Could not send email. Make sure you are logged in and SMTP is configured.");
+      setSnackbar({
+        open: true,
+        message: e?.response?.data?.detail || "Could not send email. Make sure you are logged in and SMTP is configured.",
+        severity: "error"
+      });
     }
   };
 
@@ -212,7 +220,18 @@ const PaperCard = ({ paper, onSave }) => {
             Send to mail
           </Button>
         )}
-      </CardActions>
+        </CardActions>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} sx={{ width: "100%" }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Card>
   );
 };

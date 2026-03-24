@@ -1,1 +1,4 @@
 frontend_backend_integration_report.json
+.env
+.env.*
+*/.env

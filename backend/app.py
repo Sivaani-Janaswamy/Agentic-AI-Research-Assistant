@@ -17,6 +17,7 @@ import fitz  # PyMuPDF
 import io
 import logging
 import datetime
+import time
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 import uuid
@@ -60,6 +61,10 @@ app = FastAPI()
 FORGOT_WINDOW_MINUTES = 15
 FORGOT_MAX_REQUESTS = 5
 forgot_tracker = defaultdict(list)
+# Simple rate limiter for /api/ask
+ask_tracker = defaultdict(list)
+ASK_WINDOW_SECONDS = 60
+ASK_MAX_REQUESTS = 20
 
 # ===== HEALTH =====
 @app.get("/health")
@@ -1193,6 +1198,19 @@ def run_research(request: ResearchRequest, current_user: Optional[database.User]
 @app.post("/api/ask")
 def ask_question(request: QuestionRequest):
     try:
+        # rate limit per IP
+        ip = "unknown"
+        try:
+            ip = request.client.host  # type: ignore
+        except Exception:
+            ip = "unknown"
+        now = time.time()
+        window_start = now - ASK_WINDOW_SECONDS
+        ask_tracker[ip] = [t for t in ask_tracker[ip] if t >= window_start]
+        if len(ask_tracker[ip]) >= ASK_MAX_REQUESTS:
+            raise HTTPException(status_code=429, detail="Too many requests. Please slow down.")
+        ask_tracker[ip].append(now)
+
         question = request.question
         relevant_docs = vector_store.search(question, k=6)
         answer = rag_agent.answer(question, relevant_docs)
