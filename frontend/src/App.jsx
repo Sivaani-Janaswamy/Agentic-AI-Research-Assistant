@@ -9,20 +9,24 @@ import RelatedPapers from './pages/RelatedPapers';
 import FavoritePapers from './pages/FavoritePapers';
 import Home from './pages/Home';
 import Landing from './pages/Landing';
+import FloatingBeeChat from './components/FloatingBeeChat';
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/home" element={<Home />} />
-      <Route path="/PaperComparison" element={<PaperComparison />} />
-      <Route path="/PdfUpload" element={<PdfUpload />} />
-      <Route path="/ResearchGapDetector" element={<ResearchGapDetector />} />
-      <Route path="/RelatedPapers" element={<RelatedPapers />} />
-      <Route path="/FavoritePapers" element={<FavoritePapers />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/PaperComparison" element={<PaperComparison />} />
+        <Route path="/PdfUpload" element={<PdfUpload />} />
+        <Route path="/ResearchGapDetector" element={<ResearchGapDetector />} />
+        <Route path="/RelatedPapers" element={<RelatedPapers />} />
+        <Route path="/FavoritePapers" element={<FavoritePapers />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+      </Routes>
+      <FloatingBeeChat />
+    </>
   );
 }
 

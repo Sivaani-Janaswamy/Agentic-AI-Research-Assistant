@@ -1171,13 +1171,13 @@ def run_research(request: ResearchRequest, current_user: Optional[database.User]
         traceback.print_exc()
         return {"error": str(e)}
 
-@app.post("/ask")
+@app.post("/api/ask")
 def ask_question(request: QuestionRequest):
     try:
         question = request.question
-        relevant_docs = vector_store.search(question, k=4)
+        relevant_docs = vector_store.search(question, k=6)
         answer = rag_agent.answer(question, relevant_docs)
-        return {"answer": answer}
+        return {"answer": answer, "sources": [{"title": d.get("title"), "id": d.get("id")} for d in relevant_docs]}
 
     except Exception as e:
         logger.exception(f"Ask failed: {e}")
