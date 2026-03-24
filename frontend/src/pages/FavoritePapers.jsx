@@ -4,7 +4,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
-import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { getFavorites, removeFavorite } from "../api/papers";
 
 const FavoritePapers = () => {
@@ -53,10 +52,9 @@ const FavoritePapers = () => {
           }}
         >
           <Container maxWidth="md">
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4, flexWrap: "wrap" }}>
-              <BookmarkIcon sx={{ fontSize: { xs: 24, sm: 32 }, color: "#101828" }} />
-              <Typography variant="h4" sx={{ fontSize: { xs: "1.5rem", sm: "2.125rem" } }}>Favorite Papers</Typography>
-            </Box>
+            <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: "1.75rem", sm: "2.125rem" }, color: "#101828", mb: 4 }}>
+              Favorite Papers
+            </Typography>
 
             {loading ? (
               <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>

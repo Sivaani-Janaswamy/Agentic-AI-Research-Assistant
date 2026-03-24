@@ -23,10 +23,10 @@ const Landing = () => {
       >
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
           <Typography variant="overline" sx={{ letterSpacing: 1, color: "#7F56D9", fontWeight: 700 }}>
-            Agentic Research Assistant
+            Agentic AI Research Assistant
           </Typography>
           <Typography variant="h3" sx={{ fontWeight: 800, lineHeight: 1.1, color: "#101828" }}>
-            Turn papers into insights with a friendly AI co‑pilot.
+            Turn papers into insights with BeeResearch.
           </Typography>
           <Typography variant="body1" sx={{ color: "#475467", maxWidth: 560 }}>
             Upload PDFs, search recent literature, compare findings, and track your history—all with a playful touch.
@@ -43,9 +43,9 @@ const Landing = () => {
             <Button
               variant="outlined"
               sx={{ borderRadius: 999, px: 3, py: 1.1, textTransform: "none", fontWeight: 700, borderColor: "#D0D5DD", color: "#344054" }}
-              onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+              onClick={() => (window.location.href = "/signup")}
             >
-              See Features
+              Sign up / Log in
             </Button>
           </Box>
           <Box id="features" sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 3 }}>

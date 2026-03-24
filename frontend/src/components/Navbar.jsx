@@ -67,26 +67,26 @@ const Navbar = () => {
   };
 
   const navItems = [
-    { label: "Home", path: "/" },
-    { label: "Paper Comparison", path: "/PaperComparison" },
-    { label: "PDF Upload", path: "/PdfUpload" },
-    { label: "Research Gap", path: "/ResearchGapDetector" },
-    { label: "Related Papers", path: "/RelatedPapers" },
+    { label: "Home", path: "/home" },
+    { label: "Compare", path: "/PaperComparison" },
+    { label: "Upload", path: "/PdfUpload" },
+    { label: "Gap Finder", path: "/ResearchGapDetector" },
+    { label: "Related", path: "/RelatedPapers" },
     { label: "Favorites", path: "/FavoritePapers" },
   ];
 
   const navStyle = {
     cursor: "pointer",
     textDecoration: "none",
-    color: "inherit",
-    fontWeight: 500,
-    "&:hover": { color: "#f95700cc" }
+    color: "#475467",
+    fontWeight: 600,
+    "&:hover": { color: "#101828" }
   };
 
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center', p: 2 }}>
       <Typography variant="h6" sx={{ my: 2, fontWeight: 700 }}>
-        Ai Researcher
+        BeeResearch
       </Typography>
       <List>
         {navItems.map((item) => (
@@ -110,17 +110,18 @@ const Navbar = () => {
         <ListItem disablePadding sx={{ mt: 2 }}>
           <Button
             component={Link}
-            to="/login"
+            to="/signup"
             variant="contained"
             fullWidth
             sx={{
-              background: "#000",
+              background: "#7F56D9",
               borderRadius: "30px",
               color: "white",
               textTransform: "none",
+              fontWeight: 700
             }}
           >
-            Sign Up / Login
+            Sign up
           </Button>
         </ListItem>
       </List>
@@ -133,10 +134,12 @@ const Navbar = () => {
         position="fixed"
         elevation={0}
         sx={{
-          background: "#e5e5e5",
-          color: "#000",
-          px: { xs: 1, md: 4 },
-          py: 1,
+          background: "rgba(255,255,255,0.9)",
+          backdropFilter: "blur(10px)",
+          borderBottom: "1px solid #EAECF0",
+          color: "#101828",
+          px: { xs: 1.5, md: 4 },
+          py: 0.5,
           zIndex: (theme) => theme.zIndex.drawer + 1
         }}
       >
@@ -158,17 +161,18 @@ const Navbar = () => {
             component={Link}
             to="/"
             sx={{
-              fontWeight: 600,
+              fontWeight: 800,
               textDecoration: "none",
-              color: "inherit",
-              flexGrow: { xs: 1, lg: 0 }
+              color: "#101828",
+              flexGrow: { xs: 1, lg: 0 },
+              letterSpacing: -0.2
             }}
           >
-            Ai Researcher
+            BeeResearch
           </Typography>
 
           {/* Desktop Navigation Links */}
-          <Box sx={{ display: { xs: "none", lg: "flex" }, gap: 4 }}>
+          <Box sx={{ display: { xs: "none", lg: "flex" }, gap: 3 }}>
             {navItems.map((item) => (
               <Typography 
                 key={item.label} 
@@ -176,8 +180,8 @@ const Navbar = () => {
                 to={item.path} 
                 sx={{
                   ...navStyle,
-                  color: location.pathname === item.path ? "#000" : "inherit",
-                  fontWeight: location.pathname === item.path ? 700 : 500
+                  color: location.pathname === item.path ? "#101828" : "#475467",
+                  fontWeight: location.pathname === item.path ? 800 : 600
                 }}
               >
                 {item.label}
@@ -229,24 +233,38 @@ const Navbar = () => {
               </Menu>
             </>
           ) : (
-            <Button
-              component={Link}
-              to="/login"
-              variant="contained"
-              sx={{
-                display: { xs: "none", lg: "inline-flex" },
-                background: "#000",
-                borderRadius: "30px",
-                px: 3,
-                color: "white",
-                textTransform: "none",
-                "&:hover": {
-                  background: "#222"
-                }
-              }}
-            >
-              Sign Up / Login
-            </Button>
+            <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
+              <Button
+                component={Link}
+                to="/login"
+                variant="text"
+                sx={{
+                  color: "#475467",
+                  textTransform: "none",
+                  fontWeight: 600
+                }}
+              >
+                Log in
+              </Button>
+              <Button
+                component={Link}
+                to="/signup"
+                variant="contained"
+                sx={{
+                  background: "#7F56D9",
+                  borderRadius: "999px",
+                  color: "white",
+                  textTransform: "none",
+                  px: 2.5,
+                  py: 0.8,
+                  fontWeight: 700,
+                  boxShadow: "0 10px 30px -12px rgba(127,86,217,0.6)",
+                  "&:hover": { background: "#6B46C1" }
+                }}
+              >
+                Sign up
+              </Button>
+            </Box>
           )}
         </Toolbar>
       </AppBar>

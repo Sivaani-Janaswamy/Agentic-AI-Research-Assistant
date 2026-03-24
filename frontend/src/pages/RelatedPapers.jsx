@@ -43,7 +43,7 @@ const RelatedPapers = () => {
           }}
         >
           <Container maxWidth="md">
-            <Typography variant="h4" sx={{ mb: 4, fontWeight: 700, fontSize: { xs: "1.75rem", sm: "2.125rem" } }}>
+            <Typography variant="h4" sx={{ mb: 4, fontWeight: 800, fontSize: { xs: "1.75rem", sm: "2.125rem" }, color: "#101828" }}>
               Related Papers Suggestions
             </Typography>
 
@@ -73,11 +73,15 @@ const RelatedPapers = () => {
                 onClick={handleFindPapers}
                 sx={{ 
                   mt: 3, 
-                  bgcolor: "#101828", 
+                  background: "linear-gradient(90deg, #7F56D9 0%, #9E77ED 100%)", 
                   color: "#fff",
                   px: 4,
-                  py: 1.5,
-                  "&:hover": { bgcolor: "#1D2939" }
+                  py: 1.4,
+                  borderRadius: "999px",
+                  boxShadow: "0 12px 32px -14px rgba(127,86,217,0.6)",
+                  textTransform: "none",
+                  fontWeight: 700,
+                  "&:hover": { background: "linear-gradient(90deg, #6B46C1 0%, #7F56D9 100%)" }
                 }}
                 disabled={!topic || loading}
                 fullWidth

@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { Box, Typography, TextField, Button, Container, Card, List, ListItem, ListItemIcon, ListItemText, Divider, LinearProgress, Chip, Stack } from '@mui/material';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SearchIcon from '@mui/icons-material/Search';
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
@@ -52,10 +51,9 @@ const ResearchGapDetector = () => {
           }}
         >
           <Container maxWidth="md">
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1, flexWrap: "wrap" }}>
-              <AutoAwesomeIcon sx={{ color: "#7F56D9", fontSize: { xs: 24, sm: 28 } }} />
-              <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: "1.5rem", sm: "2.125rem" } }}>Research Gap Detector</Typography>
-            </Box>
+            <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: "1.75rem", sm: "2.125rem" }, color: "#101828", mb: 1 }}>
+              Research Gap Detector
+            </Typography>
             <Typography variant="body1" sx={{ mb: 4, color: "#667085", fontSize: { xs: "0.9rem", sm: "1rem" } }}>
               Identify unexplored areas and opportunities in your field of study.
             </Typography>
@@ -73,7 +71,16 @@ const ResearchGapDetector = () => {
                 variant="contained"
                 onClick={handleDetectGaps}
                 disabled={!topic || loading}
-                sx={{ bgcolor: "#101828", "&:hover": { bgcolor: "#1D2939" }, px: 4, py: 1.5 }}
+                sx={{
+                  background: "linear-gradient(90deg, #7F56D9 0%, #9E77ED 100%)",
+                  "&:hover": { background: "linear-gradient(90deg, #6B46C1 0%, #7F56D9 100%)" },
+                  px: 4,
+                  py: 1.5,
+                  borderRadius: "999px",
+                  textTransform: "none",
+                  fontWeight: 700,
+                  boxShadow: "0 12px 32px -14px rgba(127,86,217,0.6)"
+                }}
                 startIcon={<SearchIcon />}
                 fullWidth
               >

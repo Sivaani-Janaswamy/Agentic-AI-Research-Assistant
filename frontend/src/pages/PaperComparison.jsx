@@ -107,12 +107,9 @@ const PaperComparison = () => {
           }}
         >
           <Container maxWidth="lg">
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1, flexWrap: "wrap" }}>
-              <CompareArrowsIcon sx={{ color: "#101828", fontSize: { xs: 24, sm: 28 } }} />
-              <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: "1.5rem", sm: "2.125rem" } }}>
-                Paper Comparison
-              </Typography>
-            </Box>
+            <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: "1.75rem", sm: "2.125rem" }, color: "#101828", mb: 1 }}>
+              Paper Comparison
+            </Typography>
             <Typography variant="body1" sx={{ mb: 4, color: "#667085", fontSize: { xs: "0.9rem", sm: "1rem" } }}>
               Select papers to compare across key metrics and methodologies.
             </Typography>

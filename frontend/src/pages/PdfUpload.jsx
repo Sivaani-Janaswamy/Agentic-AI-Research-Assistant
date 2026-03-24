@@ -48,7 +48,7 @@ const PdfUpload = () => {
           }}
         >
           <Container maxWidth="md">
-            <Typography variant="h4" sx={{ mb: 4, fontWeight: 700, fontSize: { xs: "1.75rem", sm: "2.125rem" } }}>
+            <Typography variant="h4" sx={{ mb: 4, fontWeight: 800, fontSize: { xs: "1.75rem", sm: "2.125rem" }, color: "#101828" }}>
               PDF Upload & AI Summary
             </Typography>
 

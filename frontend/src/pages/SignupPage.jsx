@@ -79,7 +79,7 @@ const SignupPage = () => {
       <Navbar />
       <Container maxWidth="sm" sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", py: { xs: 4, sm: 8 }, px: { xs: 2, sm: 3 } }}>
         <Paper sx={{ p: { xs: 3, sm: 5 }, width: "100%", textAlign: "center", borderRadius: "16px", boxShadow: "0px 8px 24px rgba(0,0,0,0.05)" }}>
-          <Typography variant="h4" sx={{ mb: 1, fontWeight: 700, fontSize: { xs: "1.75rem", sm: "2.125rem" } }}>Create an account</Typography>
+          <Typography variant="h4" sx={{ mb: 1, fontWeight: 800, fontSize: { xs: "1.75rem", sm: "2.125rem" }, color: "#101828" }}>Create an account</Typography>
           <Typography variant="body2" sx={{ mb: 4, color: "#667085" }}>Join thousands of researchers worldwide</Typography>
           
           <Stack spacing={2.5}>
@@ -129,7 +129,15 @@ const SignupPage = () => {
               variant="contained"
               onClick={handleSignup}
               disabled={loading}
-              sx={{ py: 1.5, bgcolor: "#101828", "&:hover": { bgcolor: "#1D2939" }, fontWeight: 700 }}
+              sx={{
+                py: 1.5,
+                background: "linear-gradient(90deg, #7F56D9 0%, #9E77ED 100%)",
+                borderRadius: "999px",
+                textTransform: "none",
+                fontWeight: 700,
+                boxShadow: "0 12px 32px -14px rgba(127,86,217,0.6)",
+                "&:hover": { background: "linear-gradient(90deg, #6B46C1 0%, #7F56D9 100%)" }
+              }}
             >
               {loading ? <CircularProgress size={24} color="inherit" /> : 'Get Started'}
             </Button>

@@ -24,10 +24,11 @@ const Searchbar = ({ value, onChange, onSearch }) => {
           display: "flex",
           alignItems: "center",
           width: "100%",
-          background: "#000",
-          borderRadius: "40px",
+          background: "linear-gradient(90deg, #7F56D9 0%, #9E77ED 100%)",
+          borderRadius: "999px",
           px: 2,
           py: 0.5,
+          boxShadow: "0 12px 32px -14px rgba(127,86,217,0.6)",
         }}
       >
         {/* Left Menu Icon */}

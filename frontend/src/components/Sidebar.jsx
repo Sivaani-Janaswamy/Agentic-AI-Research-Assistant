@@ -46,7 +46,7 @@ function Sidebar() {
         top: "72px", // Matches Navbar height + small buffer
         width: 280,
         height: "calc(100vh - 72px)",
-        background: "#F2F4F7", // Light grey as requested
+        background: "linear-gradient(180deg, #F5F3FF 0%, #FFFFFF 60%)",
         pt: 2,
         px: 1.5,
         borderRight: "1px solid #EAECF0",
@@ -58,8 +58,8 @@ function Sidebar() {
       {/* Header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, px: 1 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <HistoryIcon sx={{ fontSize: 20, color: "#667085" }} />
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#344054" }}>
+          <HistoryIcon sx={{ fontSize: 20, color: "#7F56D9" }} />
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "#101828" }}>
             History
           </Typography>
         </Box>
@@ -83,7 +83,7 @@ function Sidebar() {
                 py: 1,
                 px: 1.5,
                 "&:hover": {
-                  backgroundColor: "#EAECF0",
+                  backgroundColor: "#EEF2FF",
                 }
               }}
             >
@@ -91,8 +91,8 @@ function Sidebar() {
                 primary={session}
                 primaryTypographyProps={{
                   variant: "body2",
-                  fontWeight: 500,
-                  color: "#475467",
+                  fontWeight: 600,
+                  color: "#344054",
                   noWrap: true,
                 }}
               />

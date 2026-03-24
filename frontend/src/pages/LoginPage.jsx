@@ -118,8 +118,9 @@ const LoginPage = () => {
         }}>
           <Typography variant="h4" sx={{
             mb: 1,
-            fontWeight: 700,
-            fontSize: { xs: "1.75rem", sm: "2.125rem" }
+            fontWeight: 800,
+            fontSize: { xs: "1.75rem", sm: "2.125rem" },
+            color: "#101828"
           }}>
             Welcome Back
           </Typography>
@@ -189,9 +190,12 @@ const LoginPage = () => {
               disabled={loading}
               sx={{
                 py: 1.5,
-                bgcolor: "#101828",
-                "&:hover": { bgcolor: "#1D2939" },
-                fontWeight: 700
+                background: "linear-gradient(90deg, #7F56D9 0%, #9E77ED 100%)",
+                borderRadius: "999px",
+                textTransform: "none",
+                fontWeight: 700,
+                boxShadow: "0 12px 32px -14px rgba(127,86,217,0.6)",
+                "&:hover": { background: "linear-gradient(90deg, #6B46C1 0%, #7F56D9 100%)" }
               }}
             >
               {loading

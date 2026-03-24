@@ -192,7 +192,7 @@ function Home() {
             </Box>
 
             {/* Section Heading */}
-            <Typography variant="h5" sx={{ mb: 3, fontWeight: 700, fontSize: { xs: "1.25rem", sm: "1.5rem" } }}>
+            <Typography variant="h4" sx={{ mb: 3, fontWeight: 800, fontSize: { xs: "1.6rem", sm: "2rem" }, color: "#101828" }}>
               {searchQuery ? `Results for "${searchQuery}"` : "Recent Research Papers"}
             </Typography>
 
