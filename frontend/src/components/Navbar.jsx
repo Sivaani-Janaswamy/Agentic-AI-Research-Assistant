@@ -197,7 +197,18 @@ const Navbar = () => {
           {isAuthenticated() && user ? (
             <>
               <IconButton onClick={handleProfileMenu} sx={{ ml: 1 }}>
-                <Avatar sx={{ bgcolor: "#000" }}>
+                <Avatar
+                  sx={{
+                    bgcolor: "transparent",
+                    background: "linear-gradient(135deg, #7F56D9 0%, #9E77ED 50%, #06AED4 100%)",
+                    color: "#FFFFFF",
+                    fontWeight: 800,
+                    border: "2px solid #FFF",
+                    boxShadow: "0 6px 18px -8px rgba(127,86,217,0.7)",
+                    width: 40,
+                    height: 40,
+                  }}
+                >
                   {user.full_name ? user.full_name[0].toUpperCase() : "U"}
                 </Avatar>
               </IconButton>
