@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Button, Card, LinearProgress, Container, Divider, Stack, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Box, Typography, Button, Card, LinearProgress, Container, Divider, Stack, List, ListItem, ListItemIcon, ListItemText, Snackbar, Alert } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -12,6 +12,7 @@ const PdfUpload = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
@@ -24,9 +25,10 @@ const PdfUpload = () => {
     try {
       const data = await summarizePdf(file);
       setResult(data);
+      setSnackbar({ open: true, message: "Summary generated.", severity: "success" });
     } catch (error) {
       console.error("Error uploading/summarizing:", error);
-      alert("Failed to process PDF. Please try again.");
+      setSnackbar({ open: true, message: "Failed to process PDF. Please try again.", severity: "error" });
     } finally {
       setUploading(false);
     }
@@ -66,7 +68,7 @@ const PdfUpload = () => {
                 <Button
                   variant="outlined"
                   component="label"
-                  sx={{ width: { xs: "100%", sm: "auto" }, borderColor: "#D0D5DD", color: "#344054", bgcolor: "#fff", "&:hover": { bgcolor: "#F9FAFB" } }}
+                  sx={{ width: { xs: "100%", sm: "auto" }, borderColor: "#D0D5DD", color: "#344054", bgcolor: "#ffffff", "&:hover": { bgcolor: "#F9FAFB" } }}
                 >
                   Browse File
                   <input
@@ -145,6 +147,16 @@ const PdfUpload = () => {
         </Box>
       </Box>
       <Footer />
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} sx={{ width: "100%" }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

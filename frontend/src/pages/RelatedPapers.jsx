@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, Paper, List, ListItem, ListItemText, Container, Card, Divider, InputAdornment, CircularProgress, Chip } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper, List, ListItem, ListItemText, Container, Card, Divider, InputAdornment, CircularProgress, Chip, Snackbar, Alert } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
@@ -11,6 +11,7 @@ const RelatedPapers = () => {
   const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
 
   const handleFindPapers = async () => {
     if (!topic) return;
@@ -21,7 +22,7 @@ const RelatedPapers = () => {
       setPapers(data.related_papers || []);
     } catch (error) {
       console.error("Error fetching related papers:", error);
-      alert("Failed to find related papers.");
+      setSnackbar({ open: true, message: "Failed to find related papers.", severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -147,6 +148,17 @@ const RelatedPapers = () => {
         </Box>
       </Box>
       <Footer />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} sx={{ width: "100%" }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

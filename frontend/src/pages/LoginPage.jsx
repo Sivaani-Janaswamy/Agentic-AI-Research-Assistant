@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, TextField, Button, Paper, Container,
   Link as MuiLink, Divider, Stack, CircularProgress, Dialog,
-  DialogTitle, DialogContent, DialogActions, Alert
+  DialogTitle, DialogContent, DialogActions, Alert, Snackbar
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from "../components/Navbar";
@@ -32,6 +32,7 @@ const LoginPage = () => {
   const [resetError, setResetError] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
   const navigate = useNavigate();
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
 
   // ✅ Normal Login
   const handleLogin = async () => {
@@ -42,7 +43,7 @@ const LoginPage = () => {
       navigate('/');
     } catch (error) {
       console.error("Login failed:", error);
-      alert("Login failed. Please check your credentials.");
+      setSnackbar({ open: true, message: "Login failed. Please check your credentials.", severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -67,7 +68,7 @@ const LoginPage = () => {
               navigate('/');
             } catch (err) {
               console.error("[google] auth failed", err);
-              alert("Google sign-in failed.");
+              setSnackbar({ open: true, message: "Google sign-in failed. Please try again.", severity: "error" });
             } finally {
               setLoading(false);
             }
@@ -207,21 +208,32 @@ const LoginPage = () => {
           <Typography variant="body2" sx={{ mt: 4, color: "#667085" }}>
             Don't have an account?{' '}
             <MuiLink
-              component={Link}
-              to="/signup"
-              sx={{
-                fontWeight: 600,
-                color: "#101828",
-                textDecoration: "none"
-              }}
-            >
-              Sign up
-            </MuiLink>
-          </Typography>
-        </Paper>
-      </Container>
+            component={Link}
+            to="/signup"
+            sx={{
+              fontWeight: 600,
+              color: "#101828",
+              textDecoration: "none"
+            }}
+          >
+            Sign up
+          </MuiLink>
+        </Typography>
+      </Paper>
+    </Container>
 
-      <Dialog open={resetOpen} onClose={() => setResetOpen(false)} fullWidth maxWidth="xs">
+    <Snackbar
+      open={snackbar.open}
+      autoHideDuration={3000}
+      onClose={() => setSnackbar({ ...snackbar, open: false })}
+      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+    >
+      <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} sx={{ width: "100%" }}>
+        {snackbar.message}
+      </Alert>
+    </Snackbar>
+
+    <Dialog open={resetOpen} onClose={() => setResetOpen(false)} fullWidth maxWidth="xs">
         <DialogTitle>Password reset</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
           {resetMessage ? <Alert severity="success">{resetMessage}</Alert> : null}

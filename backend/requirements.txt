@@ -20,3 +20,5 @@ pymupdf
 langchain
 sqlalchemy
 python-jose[cryptography]
+psycopg2-binary
+prometheus-fastapi-instrumentator

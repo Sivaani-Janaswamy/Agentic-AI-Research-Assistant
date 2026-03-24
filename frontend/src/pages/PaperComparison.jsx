@@ -3,6 +3,8 @@ import {
   Box, Typography, Button, Paper, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Container, Card, Stack, CircularProgress, Checkbox, FormControlLabel
 } from '@mui/material';
+import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
@@ -17,6 +19,7 @@ const PaperComparison = () => {
   const [selected, setSelected] = useState({});
   const [loadingFavs, setLoadingFavs] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
 
   useEffect(() => {
     fetchFavs();
@@ -77,7 +80,7 @@ const PaperComparison = () => {
       }
       const papersArray = data?.papers;
       if (!Array.isArray(papersArray) || !papersArray.length) {
-        alert("No comparison data returned from AI.");
+        setSnackbar({ open: true, message: "No comparison data returned from AI.", severity: "warning" });
         setComparing(false);
         return;
       }
@@ -246,6 +249,16 @@ const PaperComparison = () => {
         </Box>
       </Box>
       <Footer />
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} sx={{ width: "100%" }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

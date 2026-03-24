@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
+from prometheus_fastapi_instrumentator import Instrumentator
 import hashlib
 import secrets
 import smtplib
@@ -56,6 +57,7 @@ UPLOAD_DIR = Path("static/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI()
+Instrumentator().instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
 
 # Simple in-memory rate limit for forgot-password (email -> list of timestamps)
 FORGOT_WINDOW_MINUTES = 15

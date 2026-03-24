@@ -22,10 +22,10 @@ import Lottie from "lottie-react";
 import beeAnimation2 from "../assets/BeeMail.json";
 
 const PaperCard = ({ paper, onSave }) => {
-  const { 
-    title = "Untitled Paper", 
-    authors = "Unknown Authors", 
-    publish_date = "N/A", 
+  const {
+    title = "Untitled Paper",
+    authors = "Unknown Authors",
+    publish_date = "N/A",
     abstract = "No abstract available.",
     category = "Research",
     pdf_url

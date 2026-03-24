@@ -3,6 +3,7 @@ from chromadb.utils import embedding_functions
 import os
 import uuid
 from typing import Optional
+from pathlib import Path
 
 
 class VectorStore:
@@ -11,8 +12,9 @@ class VectorStore:
     Optionally uses MODEL_CACHE_DIR or SENTENCE_TRANSFORMERS_HOME to load a pre-downloaded model.
     """
 
-    def __init__(self, persist_directory: str = "./chroma_db"):
-        self.persist_directory = persist_directory
+    def __init__(self, persist_directory: str = None):
+        self.persist_directory = persist_directory or os.getenv("CHROMA_DIR", "./chroma_db")
+        Path(self.persist_directory).mkdir(parents=True, exist_ok=True)
         self.client: Optional[chromadb.PersistentClient] = None
         self.embedding_fn = None
         self.collection = None

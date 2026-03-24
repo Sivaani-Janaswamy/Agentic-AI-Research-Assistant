@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, TextField, Button, Paper, Container, Link as MuiLink, Divider, Stack, CircularProgress } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper, Container, Link as MuiLink, Divider, Stack, CircularProgress, Snackbar, Alert } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import GoogleIcon from '@mui/icons-material/Google';
 import Navbar from "../components/Navbar";
@@ -21,6 +21,7 @@ const SignupPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
   const navigate = useNavigate();
   const googleBtnRef = useRef(null);
 
@@ -40,7 +41,7 @@ const SignupPage = () => {
               navigate('/');
             } catch (err) {
               console.error("Google auth failed", err);
-              alert("Google sign-in failed. Check origin/client ID settings.");
+              setSnackbar({ open: true, message: "Google sign-in failed. Check origin/client ID settings.", severity: "error" });
             } finally {
               setLoading(false);
             }
@@ -68,7 +69,7 @@ const SignupPage = () => {
       navigate('/');
     } catch (error) {
       console.error("Signup failed:", error);
-      alert("Signup failed. Email might already be registered.");
+      setSnackbar({ open: true, message: "Signup failed. Email might already be registered.", severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -151,6 +152,17 @@ const SignupPage = () => {
           </Typography>
         </Paper>
       </Container>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} sx={{ width: "100%" }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

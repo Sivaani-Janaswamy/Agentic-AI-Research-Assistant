@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Box, Typography, TextField, Button, Container, Card, List, ListItem, ListItemIcon, ListItemText, Divider, LinearProgress, Chip, Stack } from '@mui/material';
+import { Box, Typography, TextField, Button, Container, Card, List, ListItem, ListItemIcon, ListItemText, Divider, LinearProgress, Chip, Stack, Snackbar, Alert } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
@@ -10,6 +10,7 @@ const ResearchGapDetector = () => {
   const [topic, setTopic] = useState('');
   const [gaps, setGaps] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
 
   const handleDetectGaps = async () => {
     if (!topic) return;
@@ -20,7 +21,7 @@ const ResearchGapDetector = () => {
       setGaps(data.gaps || []);
     } catch (error) {
       console.error("Error detecting gaps:", error);
-      alert("Failed to analyze research landscape. Please try again.");
+      setSnackbar({ open: true, message: "Failed to analyze research landscape. Please try again.", severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -177,6 +178,17 @@ const ResearchGapDetector = () => {
         </Box>
       </Box>
       <Footer />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} sx={{ width: "100%" }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, List, ListItem, ListItemText, IconButton, Container, Card, Divider, CircularProgress } from '@mui/material';
+import { Box, Typography, List, ListItem, ListItemText, IconButton, Container, Card, Divider, CircularProgress, Snackbar, Alert } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
@@ -9,6 +9,7 @@ import { getFavorites, removeFavorite } from "../api/papers";
 const FavoritePapers = () => {
   const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
 
   useEffect(() => {
     loadFavorites();
@@ -30,9 +31,10 @@ const FavoritePapers = () => {
     try {
       await removeFavorite(paperId);
       setPapers(papers.filter(paper => paper.paper_id !== paperId));
+      setSnackbar({ open: true, message: "Removed from favorites.", severity: "success" });
     } catch (error) {
       console.error("Error removing favorite:", error);
-      alert("Failed to remove from favorites.");
+      setSnackbar({ open: true, message: "Failed to remove from favorites.", severity: "error" });
     }
   };
 
@@ -111,6 +113,16 @@ const FavoritePapers = () => {
         </Box>
       </Box>
       <Footer />
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} sx={{ width: "100%" }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

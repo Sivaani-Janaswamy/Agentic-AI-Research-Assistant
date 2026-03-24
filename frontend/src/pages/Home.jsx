@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Container, Typography, CircularProgress, Card, Chip } from "@mui/material";
+import { Box, Container, Typography, CircularProgress, Card, Chip, Snackbar, Alert } from "@mui/material";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
@@ -39,6 +39,7 @@ function Home() {
   const [trendTop, setTrendTop] = useState([]);
   const [trendSource, setTrendSource] = useState("");
   const [trendError, setTrendError] = useState("");
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
 
   useEffect(() => {
     loadInitialPapers();
@@ -154,10 +155,10 @@ function Home() {
         title: paper.title,
         pdf_url: paper.pdf_url
       });
-      alert("Paper saved to favorites!");
+      setSnackbar({ open: true, message: "Paper saved to favorites!", severity: "success" });
     } catch (error) {
       console.error("Error saving paper:", error);
-      alert("Failed to save paper. Please make sure you are logged in.");
+      setSnackbar({ open: true, message: "Failed to save paper. Please log in.", severity: "error" });
     }
   };
 
@@ -314,6 +315,17 @@ function Home() {
 
       {/* Footer */}
       <Footer />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} sx={{ width: "100%" }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
