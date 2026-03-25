@@ -3,3 +3,7 @@ __pycache__
 *.pyc
 .env
 research_output.json
+tmp
+chroma_db
+*.db
+static/models

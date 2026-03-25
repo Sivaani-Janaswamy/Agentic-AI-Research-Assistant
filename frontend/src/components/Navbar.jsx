@@ -22,7 +22,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/Logout";
 import HistoryIcon from "@mui/icons-material/History";
 import Lottie from "lottie-react";
-import beeAnimation from "../assets/Bee.json";
+import beeAnimation from "../assets/bee.json";
 import { Link, useLocation } from "react-router-dom";
 import { isAuthenticated, logout, getStoredUser, fetchMe } from "../api/auth";
 import { getHistory } from "../api/papers";

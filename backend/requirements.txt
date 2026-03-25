@@ -16,6 +16,7 @@ chromadb
 google-auth
 email-validator
 uvicorn[standard]
+gunicorn
 pymupdf
 langchain
 sqlalchemy

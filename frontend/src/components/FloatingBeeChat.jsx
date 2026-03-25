@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import Lottie from "lottie-react";
-import beeAnimation from "../assets/Bee.json";
+import beeAnimation from "../assets/bee.json";
 import { askQuestion } from "../api/analysis";
 
 const FloatingBeeChat = () => {
