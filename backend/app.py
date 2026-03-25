@@ -310,22 +310,24 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ===== CORS CONFIG =====
-raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173, https://your-frontend.onrender.com").split(",")
+raw_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,https://beeresearch-frontend.onrender.com"
+).split(",")
+
 origins = [o.strip() for o in raw_origins if o.strip()]
-allow_credentials = True
-# If '*' is present, FastAPI requires the literal list to be ['*'] and credentials must be disabled
-if "*" in origins:
-    origins = ["*"]
-    allow_credentials = False
+
+# Check if wildcard is used
+use_wildcard = "*" in origins
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=allow_credentials,
+    allow_origins=["*"] if use_wildcard else origins,
+    allow_origin_regex=r"http://localhost:\d+" if not use_wildcard else None,
+    allow_credentials=not use_wildcard,  # MUST be False if "*"
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # ===== INITIALIZE AGENTS =====
 retriever = RetrieverAgent()
 summarizer = SummarizerAgent()
