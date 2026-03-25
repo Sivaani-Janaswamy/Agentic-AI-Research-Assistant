@@ -310,7 +310,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ===== CORS CONFIG =====
-raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,*").split(",")
+raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173, https://your-frontend.onrender.com").split(",")
 origins = [o.strip() for o in raw_origins if o.strip()]
 allow_credentials = True
 # If '*' is present, FastAPI requires the literal list to be ['*'] and credentials must be disabled
@@ -375,7 +375,7 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER")
 SMTP_PASS = os.getenv("SMTP_PASS")
 SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER or "")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://beeresearch-frontend.onrender.com")
 
 # ===== AUTH DEPENDENCIES =====
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")

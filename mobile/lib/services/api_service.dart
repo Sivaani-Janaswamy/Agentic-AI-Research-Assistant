@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/paper.dart';
@@ -20,15 +21,54 @@ class ApiService {
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
+        
+        // Debugging log
+        print('📡 [API REQUEST]: ${options.method} ${options.uri}');
+        if (options.data != null) print('📦 [PAYLOAD]: ${options.data}');
+        
         return handler.next(options);
       },
-      onError: (DioException e, handler) {
-        if (e.response?.statusCode == 401) {
-          // Handle token expiration logic here if needed
+      onResponse: (response, handler) {
+        print('✅ [API RESPONSE]: ${response.statusCode} from ${response.requestOptions.path}');
+        return handler.next(response);
+      },
+      onError: (DioException e, handler) async {
+        print('❌ [API ERROR]: ${e.type} | ${e.message}');
+        if (e.response != null) {
+          print('🔴 [SERVER ERROR]: ${e.response?.statusCode} | ${e.response?.data}');
+        }
+
+        // Retry logic for connection issues or cold starts
+        if (shouldRetry(e)) {
+          try {
+            print('🔄 [RETRYING]...');
+            return handler.resolve(await _retry(e.requestOptions));
+          } catch (e) {
+            return handler.next(e as DioException);
+          }
         }
         return handler.next(e);
       },
     ));
+  }
+
+  bool shouldRetry(DioException e) {
+    return e.type == DioExceptionType.connectionTimeout ||
+           e.type == DioExceptionType.receiveTimeout ||
+           (e.type == DioExceptionType.unknown && e.error is SocketException);
+  }
+
+  Future<Response> _retry(RequestOptions requestOptions) {
+    final options = Options(
+      method: requestOptions.method,
+      headers: requestOptions.headers,
+    );
+    return _dio.request<dynamic>(
+      requestOptions.path,
+      data: requestOptions.data,
+      queryParameters: requestOptions.queryParameters,
+      options: options,
+    );
   }
 
   // Auth Endpoints
@@ -114,8 +154,6 @@ class ApiService {
 
   Future<bool> sendEmail(String content) async {
     try {
-      // Note: Backend might require paper_id for the specific /email endpoint
-      // Adjusting to a more generic structure if needed
       final response = await _dio.post(
         '/api/papers/email',
         data: {'content': content},
@@ -132,6 +170,9 @@ class ApiService {
       if (detail is String) return detail;
       return 'Server error: ${e.response?.statusCode}';
     }
-    return e.message ?? 'Unknown error occurred';
+    if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
+      return 'Request timed out. The backend may be waking up (Render cold start). Please wait...';
+    }
+    return e.message ?? 'Network error occurred';
   }
 }
